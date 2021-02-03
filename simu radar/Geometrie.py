@@ -8,10 +8,10 @@ Created on Thu Nov 12 13:14:21 2020
 import numpy as np
 import matplotlib.pyplot as plt
 
-def voiture(d,theta,a,b,N):
+def voiture(d,theta,a,b):
     dx = d*np.cos(theta)
     dy = d*np.sin(theta)
-
+    N = 1000
     L1 = a - b/4#longueur de la partie rectiligne horizontale
     L2 = b-1#ongueur de la partie rectiligne verticales
     pente = 0.5/(b/8)#inclinaison des courbures du véhicule

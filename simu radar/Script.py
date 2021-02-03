@@ -23,5 +23,5 @@ b = 4#longueur du vehicule
 N = 1000#nombre de points
 (x,y,m) = voiture(d,theta,a,b,N)
 d_spec = np.sqrt(x**2 + y**2)
-#♦radar(d_spec,v,theta,b,res_d,res_v,dmax,vmax)
+radar(d_spec,v,theta,b,res_d,res_v,dmax,vmax)
 

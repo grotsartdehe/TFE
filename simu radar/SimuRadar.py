@@ -9,8 +9,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-def radar(d,v,theta,L,res_d,res_v,dmax,vmax):
+"""
+Radar retourne la d et la vitesse d'un vehicule de largeur L 
+"""
+def radar(d,v,theta,L):
     #variation en distance
+    dmax = 80
+    vmax = 70
+    res_d = 0.274
+    res_v = 0.63
     sigma_d = res_d 
     sigma_v = res_v
     d_new = np.random.normal(d, sigma_d)
