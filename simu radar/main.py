@@ -19,7 +19,7 @@ col = ['ID', 'Class', 'Xpos', 'Ypos','Zpos','X2D','Y2D','v','xdir','ydir','zdir'
       '-XYZ@X','-XYZ@Y','-XYZ@Z','-XY-Z@X','-XY-Z@Y','-XY-Z@Z','-X-YZ@X','-X-YZ@Y','-X-YZ@Z','-X-Y-Z@X','-X-Y-Z@Y','-X-Y-Z@Z',\
       'X2DC', 'Y2DC','XY-Z2@X','XY-Z2@Y','X-YZ2@X','X-YZ2@Y','X-Y-Z2@X','X-Y-Z2@Y','-XYZ2@X','-XYZ2@Y','-XY-Z2@X','-XY-Z2@Y','-X-YZ2@X','-X-YZ2@Y','XYZ2@X','-X-Y-Z2@Y']
 rep = pd.read_csv(StringData,sep=';',names =col ,index_col=False, lineterminator = '\\') 
-print(rep.shape)
+print(rep.head())
 
 """
 names = ['Frame', 'T:', 'Time', 'ff', 'Pos', 'ffg', 'Position' , 'Detected', 'Pawns' ,'hfhe' ,'Class', '[List of classes']
