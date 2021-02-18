@@ -94,14 +94,14 @@ def load_data(radar_folder,cam_folder,dt=1/30):
             if datacam.values.shape[0] == datarad.values.shape[0] :
                 d= np.append(datacam.values,datarad.values,axis=1)
                 row = d.shape[0]
-            
+                
                     
                 for k in range(row):
                     w = d[k,0]-d[k,1]
                     h = d[k,2]- d[k,3]
                     #detec = detection(d[k,0],d[k,1],d[k,2],d[k,3],d[k,4],d[k,5],d[k,6],j)
-                    detec = detection(d[k,6],w/2 + d[k,0],h/2 + d[k,2],w,h,d[k,7],\
-                                      d[k,8],j)
+                    detec = detection(d[k,5],w/2 + d[k,0],h/2 + d[k,2],w,h,d[k,7],\
+                                      d[k,8],d[k,6],j)
                     fra.add_detection(detec)
                     fra.set_time(m)
                     #print(fra.get_detections()[0].get_X())
@@ -221,7 +221,7 @@ def associate(tracks, detections):
         if not e[1] in l1:
             l1.append(e[1])
             new.append(e)
-    print(associated)
+    
     return (tracks, detections, associated, new)
 
 def predict(tracks):
@@ -265,7 +265,7 @@ def update(tracks, detections, associated, new):
     for e in associated:
         sum_i = sum_p[e[0]]
         
-        classes[e[0]] = get_max_class(classes[e[0]], detections[e[1]])
+        classes[e[0]] = 0 # get_max_class(classes[e[0]], detections[e[1]])
         if(sum_i != 0.0):
             p_d = detections[e[1]].get_confidence()
             S = tracks[e[0]].S

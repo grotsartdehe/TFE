@@ -85,7 +85,7 @@ class track:
         
 class detection:
 
-    def __init__ (self,classcar,x_c,y_c,w,h,d,v,timestep): 
+    def __init__ (self,classcar,x_c,y_c,w,h,d,v,p,timestep): 
          
             self.c0 = classcar
             self.x_c = x_c
@@ -104,7 +104,7 @@ class detection:
             #alpha et epsilon les reperes d'Alexis ;)
             self.alpha = math.degrees(math.atan((self.x_c-self.wi/2.0)/f)) + q_alpha 
             self.epsilon = math.degrees(math.atan((self.y_c-self.hi/2.0)/f))
-
+            self.p0 = p
     def get_X(self):
 
         return np.array([self.alpha, self.epsilon, self.d, 0.0, 0.0, self.v])

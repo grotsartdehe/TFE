@@ -195,11 +195,11 @@ def radar(d,v,theta,long):
     mu = np.array([v_new,d_new])
     omega = v*math.cos(theta)#micro-doppler
     cov = np.array([[res_v,0],[0,res_d]])
-    Z = multivariate_gaussian(pos,mu , cov)
+    Z = multivariate_gaussian(pos,mu , cov)*10
     pic= np.unravel_index(Z.argmax(), Z.shape)
     for i in [-1,0,1]:
         
-        microdoprange= int((omega/sigma_v )+np.random.normal(loc=2+i,scale=3))
+        microdoprange= int((omega/sigma_v )+np.random.normal(loc=2+i,scale=2))
         amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))*np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
         newamp = np.append(amp[::-1],amp[1:])
         Z[pic[0]+i,pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
