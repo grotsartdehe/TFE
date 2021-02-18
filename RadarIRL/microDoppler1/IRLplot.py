@@ -26,6 +26,7 @@ f_r=22.1 ;
 c = 3e8;
 w_0 = 2*pi*24e9;
 BW = 250e6;
+
 """
 x = loadmat('data_QCSR2018-10-31 10_55_47.190466.npz.mat')
 test = np.array(x['a_1']-a_1_cal )
@@ -36,17 +37,24 @@ directory.sort()
 z=0
 norm = 20
 for i in directory:
-    if i.endswith('mat') and  not i.startswith('cali'):
+    if i.endswith('mat') and  not i.startswith('cali') :
         x = loadmat(i)
         x_a1 = x['a_1'] -a_1_cal
-        l = np.fft.fft(x_a1.T)
+        x_a2 = x['a_2'] -a_2_cal
+        x_a3 = x['a_3'] -a_3_cal
+        l = np.abs(np.fft.fft2(x_a1.T))+np.abs(np.fft.fft2(x_a2.T))+\
+            np.abs(np.fft.fft2(x_a3.T))
         #if z < 10 and z>5:
         #plt.figure(clear=True)
-        d = np.arange(0,x_a1.shape[1])*(c*256/(2*BW*256)) ; # -> range
-        v = np.arange(0,x_a1.shape[0])*(c*pi*f_s*3.6*2/(2*w_0*N_s*256));# -> doppler,
+        d = np.arange(0,x_a1.shape[1])*(c/(2*BW)) ; # -> range
+        v = np.arange(-x_a1.shape[0]/2,x_a1.shape[0]/2)*(c*pi*f_s*3.6*2/(2*w_0*N_s*256));# -> doppler,
         plt.figure(clear=True)
-        plt.contourf(d, v,np.log(np.abs(l))/norm)
-        plt.colorbar()  
+        plt.contourf(v,d,np.log(np.abs(l))/norm)
+        plt.colorbar() 
+        plt.title('heatmap (d,v)')
+        plt.xlabel('vitesse [km/h]')
+        plt.ylabel('distance [m]')
+        
         name = 'figures/fig_'+ str(z)
         plt.savefig(name)
         plt.close()

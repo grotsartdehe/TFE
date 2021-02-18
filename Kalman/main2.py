@@ -45,7 +45,7 @@ def kalman(radar_det, camera_det):
     for fr in frames:
         
         tracks = kalman_estimate(tracks, fr.get_detections())
-        print('TRACK PASSSE')
+        
         
         #if len(tracks) > 0:
         #    print(tracks[0].X)
@@ -77,24 +77,39 @@ def load_data(radar_folder,cam_folder,dt=1/30):
     #totradar = len(os.listdir(radar_folder))
     #totcam = len(os.listdir(cam_folder))
     j=0
-    for i in os.listdir(radar_folder):
+    fold = os.listdir(radar_folder)
+    fold.sort()
+    m=-1
+    for i in fold:
+        m +=1
         fra = frame()
-        data = pd.read_csv(os.path.join(radar_folder,i))
-        datacam = pd.read_csv(os.path.join(cam_folder,i))
-        d= np.append(datacam.values,data.values,axis=1)
-        row = d.shape[0]
+        datarad = pd.read_csv(os.path.join(radar_folder,i),sep = ' ')
+        datacam = pd.read_csv(os.path.join(cam_folder,i),sep = ' ')
         
-        for k in range(row):
+        if len(datarad) ==0 or len(datacam)==0 :
+            fra.set_time(m)
+            frames.append(fra)
+        else: 
             
-            detec = detection(d[k,0],d[k,1],d[k,2],d[k,3],d[k,4],d[k,5],d[k,6],j)
-            fra.add_detection(detec)
+            if datacam.values.shape[0] == datarad.values.shape[0] :
+                d= np.append(datacam.values,datarad.values,axis=1)
+                row = d.shape[0]
             
-            #print(fra.get_detections()[0].get_X())
-        j+=1
-        frames.append(fra)
+                    
+                for k in range(row):
+                    w = d[k,0]-d[k,1]
+                    h = d[k,2]- d[k,3]
+                    #detec = detection(d[k,0],d[k,1],d[k,2],d[k,3],d[k,4],d[k,5],d[k,6],j)
+                    detec = detection(d[k,6],w/2 + d[k,0],h/2 + d[k,2],w,h,d[k,7],\
+                                      d[k,8],j)
+                    fra.add_detection(detec)
+                    fra.set_time(m)
+                    #print(fra.get_detections()[0].get_X())
+            j+=1
+            frames.append(fra)
         
         
- 
+    print('end loaddata')
     return frames
 
 def kalman_estimate(tracks, detections):
@@ -206,7 +221,7 @@ def associate(tracks, detections):
         if not e[1] in l1:
             l1.append(e[1])
             new.append(e)
-    
+    print(associated)
     return (tracks, detections, associated, new)
 
 def predict(tracks):
@@ -249,6 +264,7 @@ def update(tracks, detections, associated, new):
     prob_0 = [(x,0,1.0) for x in range(0,len(tracks))] 
     for e in associated:
         sum_i = sum_p[e[0]]
+        
         classes[e[0]] = get_max_class(classes[e[0]], detections[e[1]])
         if(sum_i != 0.0):
             p_d = detections[e[1]].get_confidence()
@@ -439,7 +455,7 @@ def check_classe(d_c, t_c):
 
 if __name__ == '__main__':
 
-    radar_folder = "/home/kdesousa/TFE/Kalman/Data/radar/"
-    camera_folder = "/home/kdesousa/TFE/Kalman/Data/cam"
+    radar_folder = "/home/kdesousa/Documents/GitHub/TFE/Kalman/Data/radar/data-yolo-2"
+    camera_folder = "/home/kdesousa/Documents/GitHub/TFE/Kalman/Data/cam/data-yolo-2"
     kalman(radar_folder,camera_folder)
-    
+    print(' The end')

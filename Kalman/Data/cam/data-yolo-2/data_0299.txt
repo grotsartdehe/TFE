@@ -1,0 +1,3 @@
+left right top bot mess max_indx confidence
+881 966 323 515 person 0 0.7787655
+51 231 396 498 car 2 0.6889564

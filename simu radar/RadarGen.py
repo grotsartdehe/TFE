@@ -9,8 +9,8 @@ Created on Thu Jan 21 11:48:18 2021
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-
-
+import scipy.signal as ss
+from numpy import pi
 
 
 def voiture(d,theta,a,b):
@@ -123,23 +123,35 @@ Argument:
 """
     
     #plt.figure()
-    x =np.sin(phi)* np.cos(theta)
-    y = np.sin(phi)*np.sin(theta)
-    ambiguite_x1= np.arange(x,1.5,dux)
-    ambiguite_x = np.append(np.flip(np.arange(x,-1.5,-dux)), ambiguite_x1[1:])
+    u0 = np.cos(theta)
+    v0 = np.cos(phi)
+    k = 2* np.pi*24e9/3e8
+    N = 256
+    x = np.linspace(-1, 1, N)
+    y = np.linspace(-1, 1, N)
+    X, Y = np.meshgrid(x,y)
+    dx = np.array([1 , 0,0])*0.036
+    dy = np.array([1,0,1])*0.025
+    #trouvez en utilisant donnée ms1
+    #mean = 1.4414414-0.6486486j
+    #cov = 2942.9300506820273+596.4310917456352j
+    mean  = 0 + 0j
+    cov = 1 + 1j
+    x = np.random.normal(loc = np.real(mean),scale = np.real(cov),size = 3) +\
+        1j*np.random.normal(loc = np.imag(mean),scale = np.imag(cov),size = 3)
     
-    ambiguite_y1 = np.arange(y,1.5,duy)
-    ambiguite_y = np.append(np.flip(np.arange(y,-1.5,-duy)), ambiguite_y1[1:])
-    Z = np.zeros(shape=(X.shape))
-    facteur__rand= np.random.normal(loc=0,scale=0.005,size = X.shape )
-    for i in ambiguite_x:
-        for j in ambiguite_y:
+    signal = x*np.exp(1j*k*(u0*dx+v0*dy))
+    Z = signal[0]*np.exp(-1j*k*(X*dx[0]+Y*dy[0]))+\
+        signal[1]*np.exp(-1j*k*(X*dx[1]+Y*dy[1]))+\
+            signal[2]*np.exp(-1j*k*(X*dx[2]+Y*dy[2]))
 
-            Z1 = multivariate_gaussian(pos, np.array([i,j]), np.array([[dux/20,(dux+duy)/200],[(dux+duy)/40, duy/20]])) + facteur__rand
-            Z = Z1 + Z
-    plt.contourf(X,Y,Z)
+    """plt.contourf(X,Y,np.abs(Z))
     plt.colorbar()
-    plt.show()
+    plt.title('simu')
+    plt.xlabel('ux')
+    plt.ylabel('uy')
+    plt.show()"""
+
     return X,Y,Z
 
 
@@ -159,7 +171,7 @@ def multivariate_gaussian(pos, mu, Sigma):
 
 
 
-def radar(d,v,theta,L):
+def radar(d,v,theta,long):
     dmax = 80
     vmax = 70
     res_d = 0.274
@@ -188,16 +200,23 @@ def radar(d,v,theta,L):
     for i in [-1,0,1]:
         
         microdoprange= int((omega/sigma_v )+np.random.normal(loc=2+i,scale=3))
-        amp = np.array(Z[pic] * np.ones(int(microdoprange/2)))*np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
+        amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))*np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
         newamp = np.append(amp[::-1],amp[1:])
         Z[pic[0]+i,pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
-    
-    
+        
+    kernel = np.zeros((10,10))
+    dpoints=int(long*np.cos(theta)/res_d)
+    kernel[:,5-int(dpoints):5+int(dpoints)]=0.5
+    Znew = ss.convolve2d(Z,kernel,mode = 'same')
+    """
     plt.xlim((-vmax,vmax))
-    plt.contourf(X,Y,Z)
+    plt.contourf(X,Y,Znew)
     plt.colorbar()
     plt.show()
-    return X,Y,Z
+    """
+    
+    Znew += np.random.normal(size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])/50
+    return X,Y,Znew
 
 
 
@@ -220,10 +239,9 @@ Inputs: classcar: classe du véhicule [int]
     pos[:, :, 0] = X
     pos[:, :, 1] = Y
     listclasses=[[1.7,4],[1.8,5]]
-    a = listclasses[classcar][0]
-    b = listclasses[classcar][0]
+    
     Z1 = np.zeros((291,291))
-    Z2= np.zeros((100,100))
+    Z2= np.complex64( np.zeros((256,256)))
     Xdv = np.zeros((291,291))
     Ydv = np.zeros((291,291))
     """
@@ -234,29 +252,40 @@ Inputs: classcar: classe du véhicule [int]
     (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[0],phi[0])
     Z2 += Zthetaphi
     """
-    (Xdv,Ydv,rand)= radar(5,v[0],theta[0],b)
-    (Xthetaphi,Ythetaphi,zefi)= ambiguite(X,Y,pos,theta[0],phi[0])
+    
     
     for i in range(len(d)):
+        a = listclasses[classcar[i]][0]
+        b = listclasses[classcar[i]][1]
+        (Xdv,Ydv,rand)= radar(5,v[0],theta[0],b)
+        (Xthetaphi,Ythetaphi,zefi)= ambiguite(X,Y,pos,theta[0],phi[0])
         (x,y,m)= voiture(d[i],theta[i],a,b) 
         d_spec = np.sqrt(x**2 + y**2)
         (Xdv,Ydv,Zdv)= radar(d_spec,v[i],theta[i],b)
         Z1 += Zdv
         (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[i],phi[i])
-        Z2 += Zthetaphi
+        Z2 = Zthetaphi
         
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.contourf(Xdv,Ydv,Z1)
-    #ax1.xlim(-70,70)
-    #ax1.colorbar()
-    ax2.contourf(Xthetaphi,Ythetaphi,Z2)
-    #ax2.colorbar()
-    fig.show()
+    plt.figure()
+    plt.contourf(Xdv,Ydv,Z1)
+    plt.xlim(-70,70)
+    plt.title('Simulation heatmap (d,v)')
+    plt.xlabel('vitesse [km/h]')
+    plt.ylabel('distane [m]')
+    plt.colorbar()
+    plt.show()
+    plt.figure()
+    plt.contourf(Xthetaphi,Ythetaphi,Z2)
+    plt.xlabel('ux = cos(theta)')
+    plt.ylabel('uy = cos(phi)')
+    plt.title("Simu heatmap ux,uy")
+    plt.colorbar()
+    plt.show()
     
 
     return Z1,Z2
 
-
+RadarGen([0,1],[40,60],[-30,50],[np.pi/4,np.pi/7],[np.pi/6,np.pi/7])
 
 
 

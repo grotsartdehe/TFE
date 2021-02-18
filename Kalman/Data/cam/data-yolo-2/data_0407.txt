@@ -1,0 +1,2 @@
+left right top bot mess max_indx confidence
+400 490 311 559 person 0 0.84062445

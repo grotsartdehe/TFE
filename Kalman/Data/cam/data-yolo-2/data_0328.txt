@@ -1,0 +1,2 @@
+left right top bot mess max_indx confidence
+737 830 312 533 person 0 0.79230714

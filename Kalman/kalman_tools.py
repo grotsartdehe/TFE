@@ -224,9 +224,7 @@ class frame:
     def get_sensor(self):
         return self.sensor
 
-    def set_time(self, s, t):
-        if(s == 'rad'):
-            self.t = t - radar_delay 
-        elif(s == 'cam'):
+    def set_time(self,  t):
+        
             self.t = t 
        

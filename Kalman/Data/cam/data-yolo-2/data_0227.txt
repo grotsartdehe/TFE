@@ -1,0 +1,2 @@
+left right top bot mess max_indx confidence
+673 883 327 519 car 2 0.83613706
