@@ -1,0 +1,12 @@
+Résumé de l'article "transformer networks for trajectory forecasting":  https://arxiv.org/pdf/2003.08111.pdf
+	comprendre ce qu'ils ont fait
+	implémentation du transformer
+	comment on pourrait appliquer cela à notre cas
+Implémenter le Kalman avec les datas de FX
+Implémenter un MLP à la place du Kalman
+	comparer les performances Kalman vx MLP
+Bonus: 
+	tester le processus de camera calibration avec des datas 
+	réfléchir à comment mettre en place le tracking
+	écrire un début de chapitre 1 sur la simu radar et la création de heatmaps
+

@@ -1,0 +1,5 @@
+Réunion du 18 février, 17h
+	Simu radar: rajouter 1/2 c/BW
+	Reprendre les heatmaps du Projet P4 --> modifier les heatmaps
+	YOLO --> fichier txt de FX (comme Benoit)
+	transformers: piste de démarrage (réunion avec JB + améliorer avec ses suggestions)
