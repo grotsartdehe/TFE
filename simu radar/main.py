@@ -1,36 +1,99 @@
-import pandas as pd 
-import re
+
+"""
+Created on Sun Mar  7 18:35:07 2021
+
+@author: kdesousa
+"""
+
 from RadarGen import *
+import os
+import pandas as pd
+import numpy as np
+from tools import heatmap
 from Search import *
-from io import StringIO
+import pickle
+def extract(df,pos_cam):
+    """
+    Parameters
+    ----------
+    dataframe : panda dataframe
+    Returns
+    -------
+    d : liste of distance.
+    v : liste de vitesse
+    theta : angle azimutale
+    phi : angle d'élevation
+    """
+    Xpos = (df['XPos']-pos_cam[0])/100
+    Ypos = (df['YPos']-pos_cam[1])/100
+    Zpos = (df['ZPos']-pos_cam[2])/100
+    Xdir = df['XPos']
+    d = np.sqrt(Xpos**2 + Ypos**2 + Zpos**2)
+    #normaliser pour obtenir vecteur cam-vehicule
+    Xposdir = Xpos/d
+    Yposdir = Ypos/d
+    #Zposdir = Zpos/d
+    cond = d < 80
+    
+    v = df['Vel']*3.6/100
+    
+    Xdir = df['XDir']
+    Ydir = df['YDir']
+    
+    #projection orthogonale
+    norm =  np.sqrt(Xposdir**2 + Yposdir**2)
+    Vdir = (Xdir*Xposdir + Ydir*Yposdir)/norm # diviser par norm = 1
+    
+    v = v*Vdir
+    
+    
+    
+    
+    phi = np.arccos(Zpos/d)
+    theta = np.arctan2(Ypos,Xpos)
+    classcar = df['Cat']
+    return d[cond],v[cond],theta[cond],phi[cond],classcar[cond]
+    
+    
+    
 
-string = 'prototype.txt'
 
-data = pd.read_csv(string)
-data.head()
-
-
-
-
-StringData = StringIO(data.iat[2,6]) 
-step = 'Vehicul.txt'
-col = ['ID', 'Class', 'Xpos', 'Ypos','Zpos','X2D','Y2D','v','xdir','ydir','zdir','Xbox','Ybox','Zbox','Xext',\
-       'Yext','Zext','XYZ@X','XYZ@Y','XYZ@Z','XY-Z@X','XY-Z@Y','XY-Z@Z','X-YZ@X','X-YZ@Y','X-YZ@Z','X-Y-Z@X','X-Y-Z@Y','X-Y-Z@Z',\
-      '-XYZ@X','-XYZ@Y','-XYZ@Z','-XY-Z@X','-XY-Z@Y','-XY-Z@Z','-X-YZ@X','-X-YZ@Y','-X-YZ@Z','-X-Y-Z@X','-X-Y-Z@Y','-X-Y-Z@Z',\
-      'X2DC', 'Y2DC','XY-Z2@X','XY-Z2@Y','X-YZ2@X','X-YZ2@Y','X-Y-Z2@X','X-Y-Z2@Y','-XYZ2@X','-XYZ2@Y','-XY-Z2@X','-XY-Z2@Y','-X-YZ2@X','-X-YZ2@Y','XYZ2@X','-X-Y-Z2@Y']
-rep = pd.read_csv(StringData,sep=';',names =col ,index_col=False, lineterminator = '\\') 
-print(rep.head())
-
-"""
-names = ['Frame', 'T:', 'Time', 'ff', 'Pos', 'ffg', 'Position' , 'Detected', 'Pawns' ,'hfhe' ,'Class', '[List of classes']
-doc = pd.read_csv(data,delimiter=names )
-
-doc.info()
-doc.shape()
-"""
-"""
-Z1,Z2 = RadarGen(0,[30,5],[35,5],[np.pi/3,6],[np.pi/7,np.pi/8])
-res = Searchdv(Z1,1)
-resangle= Searchangle(Z2,1)
-
-"""
+        
+        
+        
+        
+if __name__ == '__main__':
+    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/simu radar/2021_03_09_17_19_58_165/cam_01'
+    pos_cam = os.path.join(csv_folder,'pos_cam_01.csv')
+    df = pd.read_csv(pos_cam, sep =';')
+    pos_cam = [df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
+    Thelist = []
+    csv_data = os.listdir(csv_folder)
+    csv_data.sort()
+    counter = 0
+    for i in csv_data:
+        if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
+            heat = heatmap(counter)
+            counter += 1
+            
+            if  counter == 1322 or counter == 750: 
+                 
+                file = os.path.join(csv_folder,i)
+                
+                dataf = pd.read_csv(file,sep =';')
+                
+                d,v,theta,phi,classcar = extract(dataf,pos_cam)
+                
+                Zdv, Zangle = RadarGen(classcar,d,v,theta,phi)
+                heat.store(Zdv,Zangle)
+                Thelist.append(heat)
+                #if not counter %100:
+                filename = 'bigfile' + str(counter)
+                outfile = open(filename,'wb')
+                pickle.dump(Thelist,outfile)
+                outfile.close()
+                Thelist= []
+    
+    
+    
+    
