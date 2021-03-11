@@ -12,9 +12,10 @@ import matplotlib.pyplot as plt
 import os
 from matplotlib.animation import FuncAnimation
 from matplotlib import animation
+from Search import Searchdv,plotDV
 
 
-cal = loadmat('/home/kdesousa/Documents/GitHub/TFE/RadarIRL/microDoppler1/calibration.mat');
+cal = loadmat('/home/kdesousa/Documents/GitHub/TFE/Projet_P4/microDoppler1/calibration.mat');
 a_1_cal = cal['a_1'];
 
 a_2_cal = cal['a_2'];
@@ -27,7 +28,7 @@ c = 3e8;
 w_0 = 2*pi*24e9;
 BW = 250e6;
 
-directory = os.listdir('/home/kdesousa/Documents/GitHub/TFE/RadarIRL/microDoppler1')
+directory = os.listdir('/home/kdesousa/Documents/GitHub/TFE/Projet_P4/microDoppler1')
 directory.sort()
 z=0
 dx = 36e-3
@@ -40,8 +41,10 @@ ux,uy = np.meshgrid(X, Y)
 r_x= [0.036/2, -0.036/2, -0.036/2];
 r_y= [-0.0225/2, -0.0225/2, 0.0225/2];
 test = np.complex64(np.zeros(3*len(directory)))
+j =0
 for i in directory:
-    if i.endswith('mat') and  not i.startswith('cali')  :
+    
+    if i.endswith('mat') and  not i.startswith('cali') and j == 60 :
         
         x = loadmat(i)
         x_a1 = x['a_1'] -a_1_cal
@@ -73,5 +76,6 @@ for i in directory:
         plt.close()
         z +=1
         
+    j+=1
         
 

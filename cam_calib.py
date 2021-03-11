@@ -47,15 +47,17 @@ for i in range(22):
     else:
         print('error2')
         count = count + 1
-Xpos = np.append(Xpos1,Xpos2)
-Ypos = np.append(Ypos1,Ypos2)
-Zpos = np.append(Zpos1,Zpos2)
+Xpos = np.append(Xpos1,Xpos2)/100
+Ypos = np.append(Ypos1,Ypos2)/100
+Zpos = np.append(Zpos1,Zpos2)/100
 Xpos2D = np.append(Xpos2D1,Xpos2D2)
 Ypos2D = np.append(Ypos2D1,Ypos2D2)
 points3D = np.float32([Xpos,Ypos,Zpos])
 points3D = points3D.T
 points2D = np.float32([Xpos2D,Ypos2D])
 points2D = points2D.T
+
+
 #Xpos = data[:,3]
 #Ypos = data[:,4]
 #Zpos = data[:,5]
@@ -87,13 +89,14 @@ camera_matrix = cv2.initCameraMatrix2D([points3D],[points2D], (width,height))
 _, K, kc, r, t = cv2.calibrateCamera([points3D],[points2D], (width, height), camera_matrix, None, flags=cv2.CALIB_USE_INTRINSIC_GUESS)
 R = cv2.Rodrigues(r[0])[0] #pour avoir une matrice
 T = t[0] #pour avoir un vecteur
-print("Camera matrix:\n", K)
+
+"""print("Camera matrix:\n", K)
 print("distorsion:\n", kc)
 print("rotation vector:\n", r)
 print("translation vector:\n", t)
 one_point = Point3D(Xpos[0], Ypos[0],Zpos[0])
 print("one_point:\n {}\n".format(one_point))
-print("one_point in homogenous coordinates:\n {}\n".format(one_point.H))
+print("one_point in homogenous coordinates:\n {}\n".format(one_point.H))"""
 P = K@np.hstack((R,T)) 
 points = Point2D(P@one_point.H)
 print(points)

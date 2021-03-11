@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import os
 from matplotlib.animation import FuncAnimation
 from matplotlib import animation
-
+from Search import *
 
 cal = loadmat('calibration.mat');
 a_1_cal = cal['a_1'];
@@ -32,12 +32,12 @@ x = loadmat('data_QCSR2018-10-31 10_55_47.190466.npz.mat')
 test = np.array(x['a_1']-a_1_cal )
 print(test.shape)
 """
-directory = os.listdir('/home/kdesousa/Documents/GitHub/TFE/RadarIRL/microDoppler1')
+directory = os.listdir('/home/kdesousa/Documents/GitHub/TFE/Projet_P4/microDoppler1')
 directory.sort()
 z=0
 norm = 20
 for i in directory:
-    if i.endswith('mat') and  not i.startswith('cali') :
+    if i.endswith('mat') and  not i.startswith('cali') and z ==50 :
         x = loadmat(i)
         x_a1 = x['a_1'] -a_1_cal
         x_a2 = x['a_2'] -a_2_cal
@@ -58,7 +58,9 @@ for i in directory:
         name = 'figures/fig_'+ str(z)
         plt.savefig(name)
         plt.close()
-        z +=1
+        Searchdv(l,l.shape[0],l.shape[1])
+        
+    z +=1
 """
 m = np.fft.fft2(test)
 plt.contourf(m)
