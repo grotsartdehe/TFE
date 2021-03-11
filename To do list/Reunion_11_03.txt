@@ -10,3 +10,20 @@ Bonus:
 	réfléchir à comment mettre en place le tracking
 	écrire un début de chapitre 1 sur la simu radar et la création de heatmaps
 
+
+To do pour implementer Kalman:
+- creer les données des heatmaps et associer à chaque framecamera
+- extraire d,v, phi theta des heatmaps et des cameras
+
+
+
+- injecter dans kalman :
+ 			- en fct des classes changer la proba
+ 			- indice de confiance 
+ 			
+ 
+
+trucs à changer
+- vecteur vitesse: % camera, avoir vitesse relative
+- associer chaque angle a la bonne d,v ( pour l'instant pas besoin car on utilise que d,v)
+

@@ -11,7 +11,9 @@ import matplotlib.pyplot as plt
 import math
 import scipy.signal as ss
 from numpy import pi
-
+import warnings
+from tools import ambig
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 def voiture(d,theta,a,b):
     """
@@ -130,8 +132,8 @@ Argument:
     x = np.linspace(-1, 1, N)
     y = np.linspace(-1, 1, N)
     X, Y = np.meshgrid(x,y)
-    dx = np.array([1 , 0,0])*0.036
-    dy = np.array([1,0,1])*0.025
+    dx = np.array([-1 , 0,0])*0.022
+    dy = np.array([0,0,-1])*0.04
     #trouvez en utilisant donnée ms1
     #mean = 1.4414414-0.6486486j
     #cov = 2942.9300506820273+596.4310917456352j
@@ -172,6 +174,7 @@ def multivariate_gaussian(pos, mu, Sigma):
 
 
 def radar(d,v,theta,long):
+    
     dmax = 80
     vmax = 70
     res_d = 0.274
@@ -197,25 +200,32 @@ def radar(d,v,theta,long):
     cov = np.array([[res_v,0],[0,res_d]])
     Z = multivariate_gaussian(pos,mu , cov)*10
     pic= np.unravel_index(Z.argmax(), Z.shape)
+    
     for i in [-1,0,1]:
         
         microdoprange= int((omega/sigma_v )+np.random.normal(loc=2+i,scale=2))
-        amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))*np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
+        amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#*np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
         newamp = np.append(amp[::-1],amp[1:])
+        
         Z[pic[0]+i,pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
         
     kernel = np.zeros((10,10))
-    dpoints=int(long*np.cos(theta)/res_d)
-    kernel[:,5-int(dpoints):5+int(dpoints)]=0.5
+    dpoints=np.abs(int(long*np.cos(theta)/res_d))
+    if dpoints >=5 :
+        dpoints=4
+    kernel[:,5-dpoints:5+dpoints]=0.1
+    
     Znew = ss.convolve2d(Z,kernel,mode = 'same')
-    """
-    plt.xlim((-vmax,vmax))
+    
+    
+    """plt.xlim((-vmax,vmax))
     plt.contourf(X,Y,Znew)
     plt.colorbar()
-    plt.show()
-    """
+    plt.show()"""
+    
     
     Znew += np.random.normal(size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])/50
+    
     return X,Y,Znew
 
 
@@ -226,8 +236,8 @@ RadarGen genere les données simulés du radar
 Inputs: classcar: classe du véhicule [int]
         dist: distance radiale du vehicule au radar en m [int] 
         vitesse: vitesse absolu en m/s [int]
-        theta: angle d'élevation [radian]
-        phi: angle azimultale [radian]
+        theta: angle azimutale [radian]
+        phi: angle d'élevation [radian]
 
 """
     #Calcul du point spéculaire 
@@ -241,7 +251,7 @@ Inputs: classcar: classe du véhicule [int]
     listclasses=[[1.7,4],[1.8,5]]
     
     Z1 = np.zeros((291,291))
-    Z2= np.complex64( np.zeros((256,256)))
+    Z2= np.complex64( np.zeros((len(d.index),256,256)))
     Xdv = np.zeros((291,291))
     Ydv = np.zeros((291,291))
     """
@@ -252,20 +262,27 @@ Inputs: classcar: classe du véhicule [int]
     (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[0],phi[0])
     Z2 += Zthetaphi
     """
+    j = 0
     
+    if len(d.index)==0:
+        pass
+    else:
+        for i in d.index:
+            
+            a = 1.7
+            b = 4 #listclasses[classcar[i]][1]
+            #(Xdv,Ydv,rand)= radar(d[i],v[i],theta[i],b)
+            #(Xthetaphi,Ythetaphi,zefi)= ambiguite(X,Y,pos,theta[0],phi[0])
+            
+            (x,y,m)= voiture(d[i],theta[i],a,b) 
+            d_spec = np.sqrt(x**2 + y**2)
+            
+            (Xdv,Ydv,Zdv)= radar(d_spec,v[i],theta[i],b)
+            Z1 += Zdv
+            (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[i],phi[i])
+            Z2[j,:,:] = Zthetaphi
+            j+=1
     
-    for i in range(len(d)):
-        a = listclasses[classcar[i]][0]
-        b = listclasses[classcar[i]][1]
-        (Xdv,Ydv,rand)= radar(5,v[0],theta[0],b)
-        (Xthetaphi,Ythetaphi,zefi)= ambiguite(X,Y,pos,theta[0],phi[0])
-        (x,y,m)= voiture(d[i],theta[i],a,b) 
-        d_spec = np.sqrt(x**2 + y**2)
-        (Xdv,Ydv,Zdv)= radar(d_spec,v[i],theta[i],b)
-        Z1 += Zdv
-        (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[i],phi[i])
-        Z2 = Zthetaphi
-        
     plt.figure()
     plt.contourf(Xdv,Ydv,Z1)
     plt.xlim(-70,70)
@@ -274,18 +291,19 @@ Inputs: classcar: classe du véhicule [int]
     plt.ylabel('distane [m]')
     plt.colorbar()
     plt.show()
+    """
     plt.figure()
     plt.contourf(Xthetaphi,Ythetaphi,Z2)
     plt.xlabel('ux = cos(theta)')
     plt.ylabel('uy = cos(phi)')
     plt.title("Simu heatmap ux,uy")
     plt.colorbar()
-    plt.show()
+    plt.show()"""
     
 
     return Z1,Z2
 
-RadarGen([0,1],[40,60],[-30,50],[np.pi/4,np.pi/7],[np.pi/6,np.pi/7])
+#RadarGen([0,1],[40,60],[-30,50],[np.pi/4,0],[np.pi/6,np.pi/5])
 
 
 
