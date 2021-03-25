@@ -7,6 +7,7 @@ Created on Tue Mar 23 15:09:10 2021
 import pandas as pd
 import numpy as np
 import os.path 
+import math
 def hausdorf(num1,num2):
     W = 1920
     H = 1080
@@ -34,10 +35,10 @@ def hausdorf(num1,num2):
         distance[i,0] = min(L)
         distance[i,1] = L.index(min(L))
     #changement de coordonnees
-    cm1[:,0] = cm1[:,0]-960*np.ones(cm1.shape[0])
+    """cm1[:,0] = cm1[:,0]-960*np.ones(cm1.shape[0])
     cm1[:,1] = cm1[:,1]-540*np.ones(cm1.shape[0])
     cm2[:,0] = cm2[:,0]-960*np.ones(cm2.shape[0])
-    cm2[:,1] = cm2[:,1]-540*np.ones(cm2.shape[0])
+    cm2[:,1] = cm2[:,1]-540*np.ones(cm2.shape[0])"""
     #print('cm1',cm1)
     #print('cm2',cm2)
     #calcul de la distance camera/objet en pixel
@@ -45,14 +46,14 @@ def hausdorf(num1,num2):
     for i in range((len(cm2))):
         index_i = np.int32(distance[i,1])
         delta_i = distance[i,0]#distance parcourue entre les deux frames
-        print("delta:",delta_i)
+        #print("delta:",delta_i)
         b = data2[i,4]#[i,1]#cm2[i,0]
         a = data1[index_i,4]#cm1[index_i,1]#cm1[index_i,0]
-        print(a,b)
+        #print(a,b)
         if (b==a):
             b+=1
             d[i] = b*delta_i/(b-a)#np.abs(b*delta_i/(b-a))
-            print('cc')
+            #print('cc')
         else:
             d[i] = b*delta_i/(b-a)#np.abs(b*delta_i/(b-a))
     return data2[:,4],cm2
@@ -77,11 +78,17 @@ while(os.path.isfile('00_'+str(count).zfill(8)+'.csv') == 1):
     print('pixel_reel_YOLO',cm2)
     beta = 28
     distance = np.zeros(len(H))
-    print(H)
+    #print(H)
     for i in range(len(H)):
-        theta = H[i]*beta/1080
-        distance[i] = (1.72/(H[i]/2+cm2[i,1]))*925#1.72/np.tan(theta*np.pi/180)
+        print(H[i])
+        print(cm2[i,1])
+        theta1 = (-H[i]/2+cm2[i,1])*beta/1920 
+        theta2 = (H[i]/2+cm2[i,1])*beta/1920
+        #print(np.tan(theta*np.pi/180))
+        distance[i] = 1.8/(np.tan(theta2*np.pi/180)-np.tan((theta1)*np.pi/180)) #(1.72/(H[i]/2+cm2[i,1]))*925#1.72/np.tan(theta*np.pi/180)
     count+=1
 distance_real = np.sqrt(np.float32((data[:,3]-Xc)**2+(data[:,4]-Yc)**2+(data[:,5]-Zc)**2))
-print('distance_estimation',distance)
-print('distance_reelle',distance_real/100)
+print('distance_estimation', 'dist reel')
+print(distance[1],distance_real[1]/100)
+print(distance[4],distance_real[6]/100)
+print(distance[5],distance_real[2]/100)
