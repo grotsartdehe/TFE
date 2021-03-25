@@ -87,12 +87,12 @@ if __name__ == '__main__':
                 Zdv, Zangle = RadarGen(classcar,d,v,theta,phi)
                 heat.store(Zdv,Zangle)
                 Thelist.append(heat)
-                #if not counter %100:
-                filename = 'bigfile' + str(counter)
-                outfile = open(filename,'wb')
-                pickle.dump(Thelist,outfile)
-                outfile.close()
-                Thelist= []
+                if not counter %1322:
+                    filename = 'bigfile' + str(counter)
+                    outfile = open(filename,'wb')
+                    pickle.dump(Thelist,outfile)
+                    outfile.close()
+                    Thelist= []
     
     
     

@@ -21,9 +21,12 @@ class heatmap:
             return self.counter
        
 class ambig:
-    def __init__(self):
-        self.counter = 0
-    def ajout(self,Zambi):
+    def __init__(self,Zambi, correspondance):
+        #self.counter = 0
         self.Z = Zambi
+        self.cores = correspondance
     def getZ(self):
         return self.Z
+    def getCores(self):
+        return self.cores
+    

@@ -263,7 +263,7 @@ Inputs: classcar: classe du véhicule [int]
     Z2 += Zthetaphi
     """
     j = 0
-    
+    appartenance = np.zeros((len(d.index),2))
     if len(d.index)==0:
         pass
     else:
@@ -281,8 +281,11 @@ Inputs: classcar: classe du véhicule [int]
             Z1 += Zdv
             (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[i],phi[i])
             Z2[j,:,:] = Zthetaphi
+            appartenance[j,0] = d_spec
+            appartenance[j,1] = d_spec
             j+=1
-    
+    heatambi = ambig(Z2,appartenance)
+    #plot DV heatmap
     plt.figure()
     plt.contourf(Xdv,Ydv,Z1)
     plt.xlim(-70,70)
@@ -291,6 +294,7 @@ Inputs: classcar: classe du véhicule [int]
     plt.ylabel('distane [m]')
     plt.colorbar()
     plt.show()
+    #plot ambiguité map
     """
     plt.figure()
     plt.contourf(Xthetaphi,Ythetaphi,Z2)
@@ -301,7 +305,7 @@ Inputs: classcar: classe du véhicule [int]
     plt.show()"""
     
 
-    return Z1,Z2
+    return Z1,heatambi
 
 #RadarGen([0,1],[40,60],[-30,50],[np.pi/4,0],[np.pi/6,np.pi/5])
 
