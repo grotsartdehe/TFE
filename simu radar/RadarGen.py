@@ -11,11 +11,12 @@ import matplotlib.pyplot as plt
 import math
 import scipy.signal as ss
 from numpy import pi
+import pandas as pd
 import warnings
 from tools import ambig
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
-def voiture(d,theta,a,b):
+def voiture(d,theta,a,b,classcar):
     """
 Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehicule'
 """
@@ -55,6 +56,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     # plt.scatter(xx7+dx,yy7+dy, marker = '.', c = 'black')
     # plt.scatter(xx8+dx,yy8+dy, marker = '.', c = 'black')
     # plt.scatter(0,0,c = 'red')
+    # plt.show()
 
     X = np.zeros(8*N)
     Y = np.zeros(8*N)
@@ -111,7 +113,7 @@ phi = np.pi/8
 
 
 
-def ambiguite(X,Y,pos,theta,phi,dux=0.36,duy=0.56):
+def ambiguite(theta,phi,dux=0.36,duy=0.56):
     """
 Ambiguité renvoie l'ampltude '
 Argument:
@@ -125,8 +127,11 @@ Argument:
 """
     
     #plt.figure()
-    u0 = np.cos(theta)
+    u0 = np.sin( theta)*np.sin(phi)
     v0 = np.cos(phi)
+    #check site de mathoworks attention ici theta est utilisé par rapport a 
+    # la convention de wiki pedia avec theta partant de l'axe z sur le planxy
+    
     k = 2* np.pi*24e9/3e8
     N = 256
     x = np.linspace(-1, 1, N)
@@ -154,7 +159,7 @@ Argument:
     plt.ylabel('uy')
     plt.show()"""
 
-    return X,Y,Z
+    return Z
 
 
 
@@ -175,39 +180,45 @@ def multivariate_gaussian(pos, mu, Sigma):
 
 def radar(d,v,theta,long):
     
-    dmax = 80
-    vmax = 70
+    dmax = 70
+    vmax = 70/3.6
     res_d = 0.274
-    res_v = 0.63
+    res_v = 0.63/3.6
     sigma_d = res_d 
     sigma_v = res_v
-    d_new = np.random.normal(d, sigma_d)
-    v_new = np.random.normal(v,sigma_v)
+    #d_new = np.random.normal(d, sigma_d)
+    #v_new = np.random.normal(v,sigma_v)
     N1=math.floor(dmax/res_d) #291
     N2= math.floor(vmax/res_v) #111
     
-    N=np.max([N1, N2])
+    N=256
     #pos est une matrice carré donc je suis obligé de faire cette manip
     #pour garder les bonnes proportions je limite le graphe apres
-    X = np.linspace(-N/2*res_v, N/2*res_v, N)
+    X = np.linspace(-vmax, vmax, N)
     Y = np.linspace(0, dmax, N)
     X, Y = np.meshgrid(X, Y)
     pos = np.empty(X.shape + (2,))
     pos[:, :, 0] = X
     pos[:, :, 1] = Y
-    mu = np.array([v_new,d_new])
+    if d==0 and v ==0:
+        Zdv = np.random.normal(size = (X.shape[0],Y.shape[0]))
+        return X,Y,Zdv
+    mu = np.array([v,d])
     omega = v*math.cos(theta)#micro-doppler
     cov = np.array([[res_v,0],[0,res_d]])
-    Z = multivariate_gaussian(pos,mu , cov)*10
+    
+    Z = multivariate_gaussian(pos,mu , cov)
+    
     pic= np.unravel_index(Z.argmax(), Z.shape)
     
-    for i in [-1,0,1]:
-        
+    for i in [0]:
+    
         microdoprange= int((omega/sigma_v )+np.random.normal(loc=2+i,scale=2))
-        amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#*np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
+        amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
         newamp = np.append(amp[::-1],amp[1:])
         
         Z[pic[0]+i,pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
+    
         
     kernel = np.zeros((10,10))
     dpoints=np.abs(int(long*np.cos(theta)/res_d))
@@ -249,51 +260,48 @@ Inputs: classcar: classe du véhicule [int]
     pos[:, :, 0] = X
     pos[:, :, 1] = Y
     listclasses=[[1.7,4],[1.8,5]]
+    tailles_vehicules =pd.read_csv('vehicule_dimension.csv',sep = ';')
     
-    Z1 = np.zeros((291,291))
+    Z1 = np.zeros((256,256))
     Z2= np.complex64( np.zeros((len(d.index),256,256)))
-    Xdv = np.zeros((291,291))
-    Ydv = np.zeros((291,291))
-    """
-    (x,y,m)= voiture(d,theta,a,b) 
-    d_spec = np.sqrt(x**2 + y**2)
-    (Xdv,Ydv,Zdv)= radar(d_spec,v[0],theta[0],b)
-    Z1 += Zdv
-    (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[0],phi[0])
-    Z2 += Zthetaphi
-    """
+    Xdv = np.zeros((256,256))
+    Ydv = np.zeros((256,256))
+    
+    
     j = 0
     appartenance = np.zeros((len(d.index),2))
+    
     if len(d.index)==0:
-        pass
+        
+        Xdv,Ydv,Zdv = radar(0,0,0,0)
+        print("entrer dans la boucle d.index ==0")
     else:
         for i in d.index:
             
             a = 1.7
-            b = 4 #listclasses[classcar[i]][1]
-            #(Xdv,Ydv,rand)= radar(d[i],v[i],theta[i],b)
-            #(Xthetaphi,Ythetaphi,zefi)= ambiguite(X,Y,pos,theta[0],phi[0])
+            b = 4 
             
-            (x,y,m)= voiture(d[i],theta[i],a,b) 
+            
+            
+            (x,y,m)= voiture(d[i],theta[i],a,b,classcar[i]) 
             d_spec = np.sqrt(x**2 + y**2)
-            
             (Xdv,Ydv,Zdv)= radar(d_spec,v[i],theta[i],b)
             Z1 += Zdv
-            (Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(X,Y,pos,theta[i],phi[i])
-            Z2[j,:,:] = Zthetaphi
-            appartenance[j,0] = d_spec
-            appartenance[j,1] = d_spec
-            j+=1
-    heatambi = ambig(Z2,appartenance)
+            #(#Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(theta[i],phi[i])
+            #Z2[j,:,:] = Zthetaphi
+            #appartenance[j,0] = d_spec
+            #appartenance[j,1] = d_spec
+            #j+=1
+    #heatambi = ambig(Z2,appartenance)
     #plot DV heatmap
-    plt.figure()
+    """plt.figure()
     plt.contourf(Xdv,Ydv,Z1)
-    plt.xlim(-70,70)
+    plt.xlim(-70/3.6,70/3.6)
     plt.title('Simulation heatmap (d,v)')
-    plt.xlabel('vitesse [km/h]')
+    plt.xlabel('vitesse [m/s]')
     plt.ylabel('distane [m]')
     plt.colorbar()
-    plt.show()
+    plt.show()"""
     #plot ambiguité map
     """
     plt.figure()
@@ -305,7 +313,7 @@ Inputs: classcar: classe du véhicule [int]
     plt.show()"""
     
 
-    return Z1,heatambi
+    return Z1# ,heatambi
 
 #RadarGen([0,1],[40,60],[-30,50],[np.pi/4,0],[np.pi/6,np.pi/5])
 

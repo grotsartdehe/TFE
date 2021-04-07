@@ -24,28 +24,44 @@ BW = 250e6;
 X = np.array([[1,5,8,4],[4,8,3,9],[4,5,6,5]])
 print(X.argsort())"""
 def getzeroed(Z,row,col,classcar=0,res_d = 0.274):
-    large = int(np.floor(5/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
+    large = int(np.floor(5.4/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
     
     Z[row-large:row+large,col-large:col+large]=0
     return Z
 
 
-def Searchangle(Z,detec):
+def Searchangle(Z,dux=0.36,duy=0.56):
     result = []
-    num = Z.shape[0]
-    for i in range(detec):
-        if i <= num:
-            x = np.argmax(Z[i,:,:])
-            result.append(x)
-        else:
-            Zzero = np.random.normal((Z[0,:,:].shape))
-            x = np.argmax(Zzero)
-            result.append(x)
-    return result
+    row = Z.shape[0]
+    col = Z.shape[1]
+    X = np.linspace(-1,1,row)
+    Y  = np.linspace(-1,1,col)
+    l0 = np.where(X<dux)
+    l1 = np.where(X>-dux)
+    l2 = np.where(Y>-duy)
+    l3 = np.where(Y<duy)
+    
+    m = Z[128:173,128:198]
+    #plt.contourf(m)
+    x = np.max(m)
+    ligne,colonne= np.where(Z==x)
+    
+    #ligne,colonne = np.unravel_index(x, (row,col))
+    
+    u = X[ligne]
+   
+    v = Y[colonne]
+    
+    
+    
+    theta = np.arccos(v)
+    phi = np.arctan2(u,np.sqrt(1-u**2-v**2))
+    
+    return theta,phi
 
 def plotDV(Z):
-    dmax = 80
-    vmax = 70
+    dmax = 70
+    vmax = 70/3.6
     res_d = 0.274
     res_v = 0.63
     sigma_d = res_d 
@@ -53,7 +69,7 @@ def plotDV(Z):
     
     N1=math.floor(dmax/res_d) #291
     N2= math.floor(vmax/res_v) #111
-    N=np.max([N1, N2])
+    N=256
     X = np.linspace(-N/2*res_v, N/2*res_v, N)
     Y = np.linspace(0, dmax, N)
     X, Y = np.meshgrid(X, Y)
@@ -78,20 +94,25 @@ def Searchdv(Z,row,col):
     result = []
     Z = np.array(Z)
     norm = np.max(Z)
-    Z = Z/norm
+    Z = Z/norm 
     
     cond = 0
     
     while(cond == 0):
         x = np.argmax(Z)
         #print(Z[x//row,x%row])
-        if Z[x//row,x%row] >= 0.5:
+        if Z[x//row,x%row] >= 0.4:
             result.append(x)
         else: 
             cond = 1
         Z = getzeroed(Z,x//row,x%row)
-        plotDV(Z)
-    return result
+        #plotDV(Z)
+    if np.size(result)==0:
+        return [], []
+    lignes,colonnes = np.unravel_index(result, (row,col))
+    d = lignes* (c/(4*BW))
+    v = (colonnes - col/2)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    return d,v
     
 def Search(picklefile,folder):
     infile = open(picklefile,'rb')
@@ -103,11 +124,11 @@ def Search(picklefile,folder):
         count = i.getcounter()
         """plotDV(heatmapDV)
         """
-        plotAngles(heatmapsAngles[2,:,:])
+        #plotAngles(heatmapsAngles[2,:,:])
         row = heatmapDV.shape[0]
         col = heatmapDV.shape[1]
-        res = Searchdv(heatmapDV,row,col)
-        lignes,colonnes = np.unravel_index(res, (row,col))
+        d,v = Searchdv(heatmapDV,row,col)
+        """lignes,colonnes = np.unravel_index(res, (row,col))
         d = lignes* (c/(4*BW))
         v = (colonnes - col/2)*(c*np.pi*f_s*3.6*2/(2*w_0*N_s*256))
         name = 'data_'+ str(count).zfill(4)+ '.txt'
@@ -117,10 +138,10 @@ def Search(picklefile,folder):
         for j in range(len(v)):
             
             file.write(str(d[j]) +' ' +str(v[j]) + '\n')
-        file.close()
+        file.close()"""
         
     """Nouvelle methode """
-def InsideLook(Z,dindex,vindex,res_d = 0.274):
+"""def InsideLook(Z,dindex,vindex,res_d = 0.274):
     large = int(np.floor(5/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
     dindex= int(dindex)
     vindex = int(vindex)
@@ -182,7 +203,7 @@ def Searchv2(picklefile,file):
         
         #plotAngles(heatmapsAngles[2,:,:])
 
-        """name = 'data_'+ str(count).zfill(4)+ '.txt'
+     name = 'data_'+ str(count).zfill(4)+ '.txt'
         name = os.path.join(folder,name)
         file = open(name,'w')
         file.write('d v \n') 
