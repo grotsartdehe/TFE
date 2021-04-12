@@ -30,31 +30,28 @@ def getzeroed(Z,row,col,classcar=0,res_d = 0.274):
     return Z
 
 
-def Searchangle(Z,dux=0.36,duy=0.56):
+def Searchangle(Z,dux=0.3125,duy=0.568):
     result = []
     row = Z.shape[0]
     col = Z.shape[1]
     X = np.linspace(-1,1,row)
     Y  = np.linspace(-1,1,col)
     l0 = np.where(X<dux)
-    l1 = np.where(X>-dux)
-    l2 = np.where(Y>-duy)
+    
+    
     l3 = np.where(Y<duy)
     
-    m = Z[128:173,128:198]
-    #plt.contourf(m)
+    m = Z[128:167,128:199]
+    
     x = np.max(m)
     ligne,colonne= np.where(Z==x)
     
     #ligne,colonne = np.unravel_index(x, (row,col))
     
     u = X[ligne]
-   
     v = Y[colonne]
-    
-    
-    
-    theta = np.arccos(v)
+
+    theta = np.arcsin(v)
     phi = np.arctan2(u,np.sqrt(1-u**2-v**2))
     
     return theta,phi
@@ -63,17 +60,14 @@ def plotDV(Z):
     dmax = 70
     vmax = 70/3.6
     res_d = 0.274
-    res_v = 0.63
-    sigma_d = res_d 
-    sigma_v = res_v
+    res_v = 0.63/3.6
     
-    N1=math.floor(dmax/res_d) #291
-    N2= math.floor(vmax/res_v) #111
+    
     N=256
-    X = np.linspace(-N/2*res_v, N/2*res_v, N)
+    X = np.linspace(-vmax, vmax, N)
     Y = np.linspace(0, dmax, N)
     X, Y = np.meshgrid(X, Y)
-    pos = np.empty(X.shape + (2,))
+    
     plt.xlim((-vmax,vmax))
     plt.contourf(X,Y,Z)
     plt.colorbar()
@@ -101,7 +95,7 @@ def Searchdv(Z,row,col):
     while(cond == 0):
         x = np.argmax(Z)
         #print(Z[x//row,x%row])
-        if Z[x//row,x%row] >= 0.4:
+        if Z[x//row,x%row] >= 0.7:
             result.append(x)
         else: 
             cond = 1

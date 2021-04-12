@@ -16,36 +16,45 @@ import warnings
 from tools import ambig
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
-def voiture(d,theta,a,b,classcar):
+
+tailles_vehicules =pd.read_csv('vehicule_dimension.csv',sep = ';')
+
+
+def voiture(d,theta,phi,xsi,a,b):
     """
 Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehicule'
-"""
-    dx = d*np.cos(theta)
-    dy = d*np.sin(theta)
-    N = 1000
+""" 
+    
+    
+    
+    dx = d*np.sin(theta)*np.cos(phi)
+    dy = d*np.sin(theta)*np.sin(phi)
+    dz = d*np.cos(theta)
+    
+    N = 200
     L1 = a - b/4#longueur de la partie rectiligne horizontale
     L2 = b-1#ongueur de la partie rectiligne verticales
     pente = 0.5/(b/8)#inclinaison des courbures du véhicule
-
+    
     vect = np.ones(N)
 
     #géomètrie
     xx1 = np.linspace(-L1/2, L1/2,N)
-    yy1 = b/2*vect #+#0.1*np.random.randn(N).T
+    yy1 = b/2*vect + 0.1*np.random.randn(N).T
     xx2 = np.linspace(L1/2, a/2,N)
-    yy2 = -pente*xx2 + b/2 + pente*L1/2 #+ 0.1*np.random.randn(N).T
+    yy2 = -pente*xx2 + b/2 + pente*L1/2 + 0.1*np.random.randn(N).T
     xx3 = a/2*vect + 0.1*np.random.randn(N).T
-    yy3 = np.linspace(-L2/2, L2/2, N) #+ 0.1*np.random.randn(N).T
+    yy3 = np.linspace(-L2/2, L2/2, N) + 0.1*np.random.randn(N).T
     xx4 = xx1
     yy4= -yy1
     xx5 = xx2
-    yy5 = pente*xx5 -b/2 - pente*L1/2 #+ 0.1*np.random.randn(N).T
+    yy5 = pente*xx5 -b/2 - pente*L1/2 + 0.1*np.random.randn(N).T
     xx6 = np.linspace(-a/2, -L1/2,N)
-    yy6 = -pente*xx6 -b/2 -pente*L1/2 #+ 0.1*np.random.randn(N).T
-    xx7 = -a/2*vect#+0.1*np.random.randn(N).T
-    yy7 = yy3 #+ 0.1*np.random.randn(N).T
+    yy6 = -pente*xx6 -b/2 -pente*L1/2 + 0.1*np.random.randn(N).T
+    xx7 = -a/2*vect +0.1*np.random.randn(N).T
+    yy7 = yy3  + 0.1*np.random.randn(N).T
     xx8 = xx6
-    yy8 = pente*xx8 + b/2 + L1/2 # + 0.1*np.random.randn(N).T
+    yy8 = pente*xx8 + b/2 + pente*L1/2   + 0.1*np.random.randn(N).T
     # plt.figure()
     # plt.scatter(xx1+dx,yy1+dy, marker = '.', c = 'black')
     # plt.scatter(xx2+dx,yy2+dy, marker = '.', c = 'black')
@@ -61,23 +70,35 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     X = np.zeros(8*N)
     Y = np.zeros(8*N)
 
-    X[0:N] = xx1+dx
-    Y[0:N] = yy1+dy
-    X[N:2*N] = xx2+dx
-    Y[N:2*N]= yy2+dy
-    X[2*N:3*N] = xx3+dx
-    Y[2*N:3*N] = yy3+dy
-    X[3*N:4*N] = xx4+dx
-    Y[3*N:4*N] = yy4+dy
-    X[4*N:5*N] = xx5+dx
-    Y[4*N:5*N] = yy5+dy
-    X[5*N:6*N] = xx6+dx
-    Y[5*N:6*N] = yy6+dy
-    X[6*N:7*N] = xx7+dx
-    Y[6*N:7*N] = yy7+dy
-    X[7*N:8*N] = xx8+dx
-    Y[7*N:8*N] = yy8+dy
-
+    X[0:N] = xx1
+    Y[0:N] = yy1
+    X[N:2*N] = xx2
+    Y[N:2*N]= yy2
+    X[2*N:3*N] = xx3
+    Y[2*N:3*N] = yy3
+    X[3*N:4*N] = xx4
+    Y[3*N:4*N] = yy4
+    X[4*N:5*N] = xx5
+    Y[4*N:5*N] = yy5
+    X[5*N:6*N] = xx6
+    Y[5*N:6*N] = yy6
+    X[6*N:7*N] = xx7
+    Y[6*N:7*N] = yy7
+    X[7*N:8*N] = xx8
+    Y[7*N:8*N] = yy8
+    
+    R = [[np.cos(xsi),-np.sin(xsi)],[np.sin(xsi),np.cos(xsi)]]
+    
+    for i in range(len(X)):
+        
+         [X[i],Y[i]] = R @ np.array([[X[i],Y[i]]]).T
+    X = X + dx
+    Y = Y + dy
+    plt.figure()
+    
+    """plt.scatter(X,Y, marker = '.', c = 'black')
+    plt.scatter(0,0,c = 'red')"""
+    
     distance = np.zeros(8*N)
     for i in range(len(distance)):
         distance[i] = np.sqrt((X[i]**2) + Y[i]**2)
@@ -85,7 +106,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     x = X[indice]
     y = Y[indice]
 
-    #plt.scatter(x,y,c = 'yellow')
+    # plt.scatter(x,y,c = 'yellow')
     slope = np.zeros(N*8)
     for j in range(0,8):
         slope[j*N:(j+1)*(N)-2] = -1/(( Y[j*N+1:(j+1)*N-1] - Y[j*N:(j+1)*N-2]) /(X[j*N+1:(j+1)*N-1]-X[j*N:(j+1)*N-2]))
@@ -94,7 +115,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     indic = np.argmin(np.abs(eval0))
     xmin = X[indic]
     ymin = Y[indic]
-   # plt.scatter(xmin,ymin,c = 'green')
+    #plt.scatter(xmin,ymin,c = 'green')
 
 
     return x,y,slope
@@ -113,7 +134,7 @@ phi = np.pi/8
 
 
 
-def ambiguite(theta,phi,dux=0.36,duy=0.56):
+def ambiguite(theta,phi,dux=0.3125,duy=0.568):
     """
 Ambiguité renvoie l'ampltude '
 Argument:
@@ -158,7 +179,6 @@ Argument:
     plt.xlabel('ux')
     plt.ylabel('uy')
     plt.show()"""
-
     return Z
 
 
@@ -178,8 +198,9 @@ def multivariate_gaussian(pos, mu, Sigma):
 
 
 
-def radar(d,v,theta,long):
-    
+def radar(d,v,phi,long,f0=24e9):
+    #check demo gauthier
+    k = 2 * pi*f0/3e8
     dmax = 70
     vmax = 70/3.6
     res_d = 0.274
@@ -188,9 +209,9 @@ def radar(d,v,theta,long):
     sigma_v = res_v
     #d_new = np.random.normal(d, sigma_d)
     #v_new = np.random.normal(v,sigma_v)
-    N1=math.floor(dmax/res_d) #291
-    N2= math.floor(vmax/res_v) #111
-    
+    # N1=math.floor(dmax/res_d) #291
+    # N2= math.floor(vmax/res_v) #111
+    a = 0.40
     N=256
     #pos est une matrice carré donc je suis obligé de faire cette manip
     #pour garder les bonnes proportions je limite le graphe apres
@@ -204,27 +225,37 @@ def radar(d,v,theta,long):
         Zdv = np.random.normal(size = (X.shape[0],Y.shape[0]))
         return X,Y,Zdv
     mu = np.array([v,d])
-    omega = v*math.cos(theta)#micro-doppler
+    omega = v*math.cos(phi)
+    #print(omega)#micro-doppler
+    """ Generation du microdoppler"""
+    # zeta = np.linspace(-pi,pi,N)
+    # Aprime =  np.abs((np.cos(zeta)**2)/d * np.exp(-2*1j*k*d/np.cos(phi)))
+    # n =  int(4* k*a * np.cos(phi))
+    
+    
+    
     cov = np.array([[res_v,0],[0,res_d]])
-    
     Z = multivariate_gaussian(pos,mu , cov)
-    
+    "pic considére comme point speculaire rajout de micro-doppler et à 4/5"
     pic= np.unravel_index(Z.argmax(), Z.shape)
     
-    for i in [0]:
     
-        microdoprange= int((omega/sigma_v )+np.random.normal(loc=2+i,scale=2))
-        amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
-        newamp = np.append(amp[::-1],amp[1:])
+    
         
-        Z[pic[0]+i,pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
+    microdoprange= int((omega/sigma_v )+np.random.normal(loc=2,scale=2))
+    amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
+    newamp = np.append(amp[::-1],amp[1:])
+    if v-omega < 0:
+        tozero = int((v-omega)/sigma_v)
+        #newamp[0:tozero]=0
+    Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
     
         
     kernel = np.zeros((10,10))
     dpoints=np.abs(int(long*np.cos(theta)/res_d))
     if dpoints >=5 :
         dpoints=4
-    kernel[:,5-dpoints:5+dpoints]=0.1
+    kernel[5-dpoints:5+dpoints,:]=0.1
     
     Znew = ss.convolve2d(Z,kernel,mode = 'same')
     
@@ -237,20 +268,33 @@ def radar(d,v,theta,long):
     
     Znew += np.random.normal(size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])/50
     
-    return X,Y,Znew
+    return X,Y,Z
 
 
-
-def RadarGen(classcar,d,v,theta,phi):
+def LookDimClass(stringcar):
+    count = 0
+    for i in tailles_vehicules['ID']:
+        if not stringcar.find(i) ==-1:
+            return tailles_vehicules['Dim_X'][count]\
+                ,tailles_vehicules['Dim_Y'][count]
+        count+=1
+    return tailles_vehicules['Dim_X'][0]\
+                ,tailles_vehicules['Dim_Y'][0]
+    
+    
+    
+def RadarGen(classcar,d,v,theta,phi,xsi):
     """
 RadarGen genere les données simulés du radar
-Inputs: classcar: classe du véhicule [int]
+Inputs: classcar: classe du véhicule [string]
         dist: distance radiale du vehicule au radar en m [int] 
         vitesse: vitesse absolu en m/s [int]
         theta: angle azimutale [radian]
         phi: angle d'élevation [radian]
+        xsi: orientation du véhicule
 
 """
+    
     #Calcul du point spéculaire 
     N = 100
     X = np.linspace(-1, 1, N)
@@ -259,33 +303,30 @@ Inputs: classcar: classe du véhicule [int]
     pos = np.empty(X.shape + (2,))
     pos[:, :, 0] = X
     pos[:, :, 1] = Y
-    listclasses=[[1.7,4],[1.8,5]]
-    tailles_vehicules =pd.read_csv('vehicule_dimension.csv',sep = ';')
+    
+    
     
     Z1 = np.zeros((256,256))
-    Z2= np.complex64( np.zeros((len(d.index),256,256)))
+    #Z2= np.complex64( np.zeros((len(d.index),256,256)))
     Xdv = np.zeros((256,256))
     Ydv = np.zeros((256,256))
     
     
     j = 0
-    appartenance = np.zeros((len(d.index),2))
+    #appartenance = np.zeros((len(d.index),2))
     
-    if len(d.index)==0:
+    if len(d)==0:
         
         Xdv,Ydv,Zdv = radar(0,0,0,0)
         print("entrer dans la boucle d.index ==0")
     else:
-        for i in d.index:
+        for i in range(len(d)):
             
-            a = 1.7
-            b = 4 
-            
-            
-            
-            (x,y,m)= voiture(d[i],theta[i],a,b,classcar[i]) 
+            a,b = LookDimClass(classcar[i])
+           
+            (x,y,m)= voiture(d[i],theta[i],phi[i],xsi[i],a/100,b/100) 
             d_spec = np.sqrt(x**2 + y**2)
-            (Xdv,Ydv,Zdv)= radar(d_spec,v[i],theta[i],b)
+            (Xdv,Ydv,Zdv)= radar(d_spec,v[i],phi[i],a/100)
             Z1 += Zdv
             #(#Xthetaphi,Ythetaphi,Zthetaphi)= ambiguite(theta[i],phi[i])
             #Z2[j,:,:] = Zthetaphi
@@ -294,14 +335,14 @@ Inputs: classcar: classe du véhicule [int]
             #j+=1
     #heatambi = ambig(Z2,appartenance)
     #plot DV heatmap
-    """plt.figure()
-    plt.contourf(Xdv,Ydv,Z1)
-    plt.xlim(-70/3.6,70/3.6)
-    plt.title('Simulation heatmap (d,v)')
-    plt.xlabel('vitesse [m/s]')
-    plt.ylabel('distane [m]')
-    plt.colorbar()
-    plt.show()"""
+    # plt.figure()
+    # plt.contourf(Xdv,Ydv,Z1)
+    # plt.xlim(-70/3.6,70/3.6)
+    # plt.title('Simulation heatmap (d,v)')
+    # plt.xlabel('vitesse [m/s]')
+    # plt.ylabel('distane [m]')
+    # plt.colorbar()
+    # plt.show()
     #plot ambiguité map
     """
     plt.figure()

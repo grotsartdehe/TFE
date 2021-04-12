@@ -14,6 +14,7 @@ import numpy as np
 from tools import heatmap
 from Search import *
 import pickle
+
 def extract(df,pos_cam):
     """
     Parameters
@@ -26,36 +27,60 @@ def extract(df,pos_cam):
     theta : angle azimutale
     phi : angle d'élevation
     """
-    Xpos = (df['XPos']-pos_cam[0])/100
-    Ypos = (df['YPos']-pos_cam[1])/100
-    Zpos = (df['ZPos']-pos_cam[2])/100
-    Xdir = df['XPos']
+    Xpos1 = (df['XPos']-pos_cam[1])/100
+    Ypos1 = (df['YPos']-pos_cam[2])/100
+    Zpos1 = (df['ZPos']-pos_cam[3])/100
+    pitch =  pos_cam[5]*np.pi/180
+    print(pos_cam[5])
+    print(pos_cam[6])
+    yaw = pos_cam[6]*np.pi/180
+    Rz =np.array( [[np.cos(yaw),-np.sin(yaw),0],[np.sin(yaw),np.cos(yaw),0],[0,0,1]])
+    Ry = np.array([[np.cos(pitch),0, np.sin(pitch)],[0,1,0],[-np.sin(pitch),0,np.cos(pitch)]])
+    R = Rz@Ry
+    Posnew =   np.array([Xpos1,Ypos1,Zpos1])
+    Xpos = Posnew[0,:]
+    Ypos = Posnew[1,:]
+    Zpos = Posnew[2,:]
     d = np.sqrt(Xpos**2 + Ypos**2 + Zpos**2)
     
     #normaliser pour obtenir vecteur cam-vehicule
     Xposdir = Xpos/d
     Yposdir = Ypos/d
-    #Zposdir = Zpos/d
+    Zposdir = Zpos/d
     cond = d < 70
     
     v = df['Vel']/100
     
     Xdir = df['XDir']
     Ydir = df['YDir']
+    Zdir= df['ZDir']
+    Dirnew = R @  np.array([Xdir,Ydir,Zdir])
+    Xdir = Dirnew[0]
+    Ydir = Dirnew[1]
+    Zdir= Dirnew[2]
     
     #projection orthogonale
-    norm =  np.sqrt(Xposdir**2 + Yposdir**2)
+    norm =  np.sqrt(Xposdir**2 + Yposdir**2 + Zposdir**2) 
     Vdir = (Xdir*Xposdir + Ydir*Yposdir)/norm # diviser par norm = 1
     
-    v = v*Vdir
     
     
+   
     
-    
-    theta = np.arccos(Zpos/d)
+    theta = np.arccos(Zpos/d) 
     phi = np.arctan2(Ypos,Xpos)
-    classcar = df['Cat']
-    return d[cond],v[cond],theta[cond],phi[cond],classcar[cond]
+    classcar = df['ID']
+    v1 = v*Vdir
+    
+    xsi = np.arctan2(Ydir,Xdir)
+    
+    store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
+    
+    print(store)
+    
+   
+    
+    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond]+pi/2
     
     
     
@@ -82,12 +107,12 @@ def CreateandSearch(FX_csv,pos_cam):
     
     """ extractions des données de FX"""
     data = pd.read_csv(FX_csv,sep =';',index_col=False )
-    d_real,v_real,theta,phi,classcar = extract(data,pos_cam)
-   
+    d_real,v_real,theta,phi,classcar,xsi = extract(data,pos_cam)
+    v_real = v_real.values
     """Generation et recherche dsitance, vitessede heatmap d,v"""
-    Zdv = RadarGen(classcar,d_real,v_real,theta,phi)
+    Zdv = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi)
     d_esti,v_esti = Searchdv(Zdv,256,256)
-    # plotDV(Zdv)
+    #plotDV(Zdv)
     
     # if not  type(d_esti) == list:
     #     d_esti = np.array([d_esti])
@@ -97,15 +122,17 @@ def CreateandSearch(FX_csv,pos_cam):
     # print("estimé",d_esti)
     # print("real vitesse rad", v_real.values)
     # print("estimé",v_esti)
+    
     if len(d_esti)>0:
         min_dist = np.ones((d_esti.size))*500
         index = np.zeros((d_esti.size))
         for i in range(len(d_esti)):
-            for j in range(len(d_real.values)):
+            for j in range(len(d_real)):
                     
                     
+                
                     
-                    l = (d_esti[i] - d_real.values[j])**2 + (v_esti[i] - v_real.values[j])**2
+                    l = (d_esti[i] - d_real[j])**2 + (v_esti[i] - v_real[j])**2
                    
                     
                     if min_dist[i] >l:
@@ -124,7 +151,7 @@ def CreateandSearch(FX_csv,pos_cam):
     index = np.int_(index)
     for m in index:
         
-        Z = ambiguite(theta.values[m],phi.values[m])
+        Z = ambiguite(theta[m],phi[m])
         theta_esti[count],phi_esti[count] = Searchangle(Z )
         
         count +=1
@@ -135,7 +162,7 @@ def CreateandSearch(FX_csv,pos_cam):
     """creation de la liste"""
     lister = np.zeros((d_esti.shape[0],4))
     for i in range(len(d_esti)):
-        lister[i,:]=d_esti[i],theta_esti[i],phi_esti[i],v_esti[i]
+        lister[i,:]=d_esti[i],(theta_esti[i])*180/pi,phi_esti[i]*180/pi,v_esti[i]
     # print(lister)
     return lister
         
@@ -145,25 +172,25 @@ if __name__ == '__main__':
     pos_cam = os.path.join(csv_folder,'pos_cam_00.csv')
     df = pd.read_csv(pos_cam, sep =';')
     
-    pos_cam = [df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
+    pos_cam = df.values[1,:]#[df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
     Thelist = []
     csv_data = os.listdir(csv_folder)
     csv_data.sort()
     counter = 581
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
-            heat = heatmap(counter)
+        
             
             
-            if  counter == 1204 or counter == 881 or counter == 582: #or counter == 4520: 
+            if  counter == 2018:#2018: #or counter == 881 or counter == 1536: #or counter == 4520: 
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
                 test = CreateandSearch(file,pos_cam)
+                print(test)
             counter += 1
                 
-                 
-
+                
                 
 """                if not counter %1322:
                     filename = 'bigfile' + str(counter)
