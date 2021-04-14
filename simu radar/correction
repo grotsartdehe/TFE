@@ -24,17 +24,17 @@ def correction(vect2,dt=1/30,dx = 0.022,dy = 0.04,f0=24e9):
     phi_rad += (nx)*ambphi
     theta_rad += (nz)*ambtheta
     
-    if np.abs(phi_cam - phi_rad) < ambphi:
-        phi1 = phi_rad
-        phi1 += ambphi*np.sign(nx)
-        if np.abs(phi1 - phi_cam) > np.abs(phi_rad - phi_cam):
-            phi_rad = phi1
+    # if np.abs(phi_cam - phi_rad) < ambphi:
+    #     phi1 = phi_rad
+    #     phi1 += ambphi*np.sign(nx)
+    #     if np.abs(phi1 - phi_cam) < np.abs(phi_rad - phi_cam):
+    #         phi_rad = phi1
             
-    if np.abs(theta_cam - theta_rad) >ambtheta/2:
-        theta1 = theta_rad
-        theta1 += ambtheta * np.sign(nz)
-        if np.abs(theta1 - theta_cam)> np.abs(theta_rad - theta_cam):
-            theta_rad = theta1
+    # if np.abs(theta_cam - theta_rad) <ambtheta:
+    #     theta1 = theta_rad
+    #     theta1 += ambtheta * np.sign(nz)
+    #     if np.abs(theta1 - theta_cam)> np.abs(theta_rad - theta_cam):
+    #         theta_rad = theta1
     #while( phi_cam - phi_rad > ambphi/2):
     #     phi_rad += ambphi
     # while(theta_cam - theta_rad >ambtheta/2) :
@@ -62,12 +62,12 @@ if __name__ == '__main__':
    data = pd.read_csv('data.csv')
    
    #z = correction(dataxee[5,:],dataxee[180,:])
+   test = [ 6.51918674e+01 , 8.56141457e+01,  1.43202132e+01,  8.32026743e-03,65.1  ,      85.72694267, 78.00401555 ,-7.16075897]
+   test1= [ 6.74544044e+01 , 8.58685102e+01, -2.91537442e+01, -3.92323937e+00,68.7  ,      63.19339769 ,83.46988126, -0.16274452]
+   test2 = [ 4.87596297e+01 , 8.74149614e+01, -6.42775036e+00,  5.92556768e+00,51.9  ,      78.46304097, 77.08358265 , 6.18429184]
+   test3 = [ 1.92914884e+01 , 1.01287032e+02, -2.38916664e+01,  5.80329244e+00,18.9   ,     89.32591646, 76.15974583,  6.18429184]
+   test4= [ 6.25340527e+01 , 8.59562474e+01,  1.39324962e+01, -1.19392765e+00,63.6   ,     67.15526127 ,78.92131693 ,-1.4647007]
    
-   maybe = [ 50.04259141, 100.18920533,  -9.65049533  , 4.3972918 ,51.9    ,    33.56902489 +2* 32.554420177887685 ,  8.38952386 , 4.55684662]
-   may = [34.98588118, 103.98209547, -13.93989234 ,  2.65058119,35.4   ,     61.67256179+ 32.554420177887685 , 11.04428364,  2.76665688]
-   fuck = [61.613836,   85.49248376,  8.1430172,  -0.90370174,63.9   ,     65.19016853, 85.27617424, -0.97646713]
-   fuck1 = [ 57.3937671,   86.23012005,  10.27473275,   2.78703831,59.4  ,      65.68426083, 86.17744627 , 2.9294014]
-   fuck2 = [42.3935702,   88.95974916 , -7.58722981,   0.84080054,44.7  ,     65.19016853, 88.87648134,  0.81372261]
-   z = correction(fuck1)
+   z = correction(test4)
    print(z)
    

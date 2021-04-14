@@ -140,7 +140,7 @@ def CreateandSearch(FX_csv,pos_cam):
                         min_dist[i] = l 
                        
                         index[i] = j
-            #print(d_esti[i],d_real[int(index[i])])
+            print(d_esti[i],d_real[int(index[i])])
         
     else :
         
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         
             
             
-            if  counter == 818:
+            if  counter == 2500:
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
