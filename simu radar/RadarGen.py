@@ -94,7 +94,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
          [X[i],Y[i]] = R @ np.array([[X[i],Y[i]]]).T
     X = X + dx
     Y = Y + dy
-    plt.figure()
+    #plt.figure()
     
     """plt.scatter(X,Y, marker = '.', c = 'black')
     plt.scatter(0,0,c = 'red')"""
@@ -148,18 +148,24 @@ Argument:
 """
     
     #plt.figure()
-    u0 = np.sin( theta)*np.sin(phi)
-    v0 = np.cos(phi)
+    # if theta <0:
+    #     u0 = np.cos(-pi/2 - theta)*np.sin(phi)
+    #     v0 = np.sin(-pi/2 - theta)
+    # else:
+    #     u0 = np.cos(pi/2- theta)*np.sin(phi)
+    #     v0 = np.sin(pi/2 - theta)
+    v0 = np.cos(theta)
+    u0 = np.cos(phi)
     #check site de mathoworks attention ici theta est utilisé par rapport a 
     # la convention de wiki pedia avec theta partant de l'axe z sur le planxy
-    
+    #print(u0,v0)
     k = 2* np.pi*24e9/3e8
     N = 256
     x = np.linspace(-1, 1, N)
     y = np.linspace(-1, 1, N)
     X, Y = np.meshgrid(x,y)
-    dx = np.array([-1 , 0,0])*0.022
-    dy = np.array([0,0,-1])*0.04
+    dx = np.array([1 , 0,0])*0.022
+    dz = np.array([0,0,-1])*0.04
     #trouvez en utilisant donnée ms1
     #mean = 1.4414414-0.6486486j
     #cov = 2942.9300506820273+596.4310917456352j
@@ -168,18 +174,18 @@ Argument:
     x = np.random.normal(loc = np.real(mean),scale = np.real(cov),size = 3) +\
         1j*np.random.normal(loc = np.imag(mean),scale = np.imag(cov),size = 3)
     
-    signal = x*np.exp(1j*k*(u0*dx+v0*dy))
-    Z = signal[0]*np.exp(-1j*k*(X*dx[0]+Y*dy[0]))+\
-        signal[1]*np.exp(-1j*k*(X*dx[1]+Y*dy[1]))+\
-            signal[2]*np.exp(-1j*k*(X*dx[2]+Y*dy[2]))
+    signal = x*np.exp(1j*k*(u0*dx+v0*dz))
+    Z = signal[0]*np.exp(-1j*k*(X*dx[0]+Y*dz[0]))+\
+        signal[1]*np.exp(-1j*k*(X*dx[1]+Y*dz[1]))+\
+            signal[2]*np.exp(-1j*k*(X*dx[2]+Y*dz[2]))
 
-    """plt.contourf(X,Y,np.abs(Z))
-    plt.colorbar()
-    plt.title('simu')
-    plt.xlabel('ux')
-    plt.ylabel('uy')
-    plt.show()"""
-    return Z
+    # plt.contourf(X,Y,np.abs(Z))
+    # plt.colorbar()
+    # plt.title('simu')
+    # plt.xlabel('ux')
+    # plt.ylabel('uy')
+    # plt.show()
+    return np.abs(Z)
 
 
 

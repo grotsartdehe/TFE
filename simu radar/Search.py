@@ -30,30 +30,34 @@ def getzeroed(Z,row,col,classcar=0,res_d = 0.274):
     return Z
 
 
-def Searchangle(Z,dux=0.3125,duy=0.568):
+def Searchangle(Z):
     result = []
     row = Z.shape[0]
     col = Z.shape[1]
-    X = np.linspace(-1,1,row)
-    Y  = np.linspace(-1,1,col)
-    l0 = np.where(X<dux)
+    X = np.linspace(-1,1,256)
+    Y  = np.linspace(-1,1,256)
+    #l0 = np.where(X<dux)
     
     
-    l3 = np.where(Y<duy)
+    #l3 = np.where(Y<duy)
     
     m = Z[128:167,128:199]
     
+    # plt.figure()
+    # plt.contourf(X[128:199],Y[128:167],m)
     x = np.max(m)
+    # print(np.where(Z==x))
     ligne,colonne= np.where(Z==x)
     
     #ligne,colonne = np.unravel_index(x, (row,col))
     
     u = X[ligne]
-    v = Y[colonne]
+    v = X[colonne]
+    #print(u*180/np.pi,v*180/np.pi)
 
-    theta = np.arcsin(v)
-    phi = np.arctan2(u,np.sqrt(1-u**2-v**2))
-    
+    theta = np.arccos(v)#np.arcsin(v)
+    phi = np.arccos(u)#np.arctan(u,np.sqrt(1-u**2-v**2))
+    #print(theta*180/np.pi,phi*180/np.pi)
     return theta,phi
 
 def plotDV(Z):
