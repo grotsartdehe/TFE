@@ -140,7 +140,7 @@ def CreateandSearch(FX_csv,pos_cam):
                         min_dist[i] = l 
                        
                         index[i] = j
-            print(d_esti[i],d_real[int(index[i])])
+            #print(d_esti[i],d_real[int(index[i])])
         
     else :
         
@@ -155,18 +155,19 @@ def CreateandSearch(FX_csv,pos_cam):
     for m in index:
         
         Z = ambiguite(theta[m],phi[m])
+        #plotAngles(Z)
         theta_esti[count],phi_esti[count] = Searchangle(Z )
         
         count +=1
-    # print('real phi',phi.values*180/pi)
+    # print('real phi',phi*180/pi)
     # print('estim phi',phi_esti*180/pi)
-    # print('real theta',theta.values*180/pi)
+    # print('real theta',theta*180/pi)
     # print('estim theta',theta_esti*180/pi)
     """creation de la liste"""
     lister = np.zeros((d_esti.shape[0],4))
     for i in range(len(d_esti)):
         lister[i,:]=d_esti[i],(theta_esti[i])*180/pi,phi_esti[i]*180/pi,v_esti[i]
-    # print(lister)
+    print(lister)
     return lister
         
         
@@ -185,12 +186,12 @@ if __name__ == '__main__':
         
             
             
-            if  counter == 2500:
+            if  counter == 1200:
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
                 test = CreateandSearch(file,pos_cam)
-                print(test)
+                #print(test)
             counter += 1
                 
                 
