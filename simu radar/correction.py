@@ -262,8 +262,9 @@ def correctionvitesse(vect1,vect2,dt = 1/30):
         #print('vtrue',(vect2[m,3]))
         #print('vestim',vabs)
         #print(vectcor)
-        #vectcor[count,7] = vabs
+        vectcor[count,7] = vabs
         count +=1
+    return vectcor
 
 if __name__ == '__main__':
    dataxee = pd.read_csv('data_est.csv',sep=';').values
