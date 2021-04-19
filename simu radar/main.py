@@ -31,13 +31,14 @@ def extract(df,pos_cam):
     Ypos1 = (df['YPos']-pos_cam[2])/100
     Zpos1 = (df['ZPos']-pos_cam[3])/100
     pitch =  pos_cam[5]*np.pi/180
-    print(pos_cam[5])
-    print(pos_cam[6])
+    # print(pos_cam[5])
+    # print(pos_cam[6])
     yaw = pos_cam[6]*np.pi/180
     Rz =np.array( [[np.cos(yaw),-np.sin(yaw),0],[np.sin(yaw),np.cos(yaw),0],[0,0,1]])
     Ry = np.array([[np.cos(pitch),0, np.sin(pitch)],[0,1,0],[-np.sin(pitch),0,np.cos(pitch)]])
     R = Rz@Ry
-    Posnew =   np.array([Xpos1,Ypos1,Zpos1])
+    
+    Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
     Xpos = Posnew[0,:]
     Ypos = Posnew[1,:]
     Zpos = Posnew[2,:]
@@ -54,7 +55,7 @@ def extract(df,pos_cam):
     Xdir = df['XDir']
     Ydir = df['YDir']
     Zdir= df['ZDir']
-    Dirnew = R @  np.array([Xdir,Ydir,Zdir])
+    Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
     Xdir = Dirnew[0]
     Ydir = Dirnew[1]
     Zdir= Dirnew[2]
@@ -132,13 +133,15 @@ def CreateandSearch(FX_csv,pos_cam):
                     
                 
                     
-                    l = (d_esti[i] - d_real[j])**2 + (v_esti[i] - v_real[j])**2
+                    l = (d_esti[i] - d_real[j])**2 #+ (v_esti[i] - v_real[j])**2
                    
                     
                     if min_dist[i] >l:
                         min_dist[i] = l 
                        
                         index[i] = j
+            #print(d_esti[i],d_real[int(index[i])])
+        
     else :
         
         return []
@@ -152,18 +155,19 @@ def CreateandSearch(FX_csv,pos_cam):
     for m in index:
         
         Z = ambiguite(theta[m],phi[m])
+        #plotAngles(Z)
         theta_esti[count],phi_esti[count] = Searchangle(Z )
         
         count +=1
-    # print('real phi',phi.values*180/pi)
+    # print('real phi',phi*180/pi)
     # print('estim phi',phi_esti*180/pi)
-    # print('real theta',theta.values*180/pi)
+    # print('real theta',theta*180/pi)
     # print('estim theta',theta_esti*180/pi)
     """creation de la liste"""
     lister = np.zeros((d_esti.shape[0],4))
     for i in range(len(d_esti)):
         lister[i,:]=d_esti[i],(theta_esti[i])*180/pi,phi_esti[i]*180/pi,v_esti[i]
-    # print(lister)
+    print(lister)
     return lister
         
         
@@ -182,12 +186,12 @@ if __name__ == '__main__':
         
             
             
-            if  counter == 2018:#2018: #or counter == 881 or counter == 1536: #or counter == 4520: 
+            if  counter == 1200:
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
                 test = CreateandSearch(file,pos_cam)
-                print(test)
+                #print(test)
             counter += 1
                 
                 
