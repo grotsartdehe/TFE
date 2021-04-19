@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     
-    theta_rad,phi_rad = vect2[5:7]
+    theta_rad,phi_rad = vect2[4:6]
     theta_cam,phi_cam = vect2[1:3]
     
     pitch= -12.999994000000001
@@ -43,7 +43,7 @@ def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     #d,theta,phi,v
    
     vectcor = vect2
-    vectcor[5:7] = [theta_rad,phi_rad]
+    vectcor[4:6] = [theta_rad,phi_rad]
     return vectcor
 
 # def correctionvit(vect1,vect2,dt = 1/30):
@@ -203,68 +203,143 @@ def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     
     
     #return vectcor
+    # def correctionvitesse(vect1,vect2,dt = 1/30):
+    
+#     """Etape d'assoc"""
+#     vectcor = np.zeros((vect2.shape))
+#     min_dist = np.ones((vect2.shape[0]))*500
+#     index = np.zeros((vect2.shape[0]))
+#     #print(vect1)
+#     if vect1 is None:
+#         return vect2
+#     for i in range(vect1.shape[0]):
+#         for j in range(vect2.shape[0]):
+#             l = (vect1[i,0] - vect2[j,0])**2 
+    
+#             if min_dist[j] >l:
+#                 min_dist[j] = l 
+#                 index[j] = j
+#     index = np.int_(index)
+#     count = 0
+#     """"facon 1"""
+#     for m  in index:
+#         vectcor[count,:] = vect2[m]
+#         d = vect2[m,4]
+#         #d1=vect1[count,4]
+#         v = vect2[m,7]
+#         theta1 = vect1[count,5]*np.pi/180
+#         theta2 = vect2[m,5]*np.pi/180
+        
+#         phi1 = vect1[count,6]*np.pi/180
+#         phi2 = vect2[m,6]*np.pi/180
+#         #print(vect2[m,0])
+#         vabs = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2)
+#         #vabs = v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2
+#         #print('vabs',vabs)
+#         if vabs > 20:
+#             minangles = 500
+#             for n in range(vect1.shape[0]):
+#                 if not count == n:
+                    
+#                     d = vect2[m,4]
+        
+#                     v = vect2[m,7]
+#                     theta1 = vect1[n,5]*np.pi/180
+#                     theta2 = vect2[m,5]*np.pi/180
+        
+#                     phi1 = vect1[n,6]*np.pi/180
+#                     phi2 = vect2[m,6]*np.pi/180
+#                     vabs1 = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2)
+#                     if((theta2 - theta1)**2+(phi2 - phi1)**2)<minangles:
+                        
+#                     #print(vabs1)
+#                         if vabs1 < 20:
+#                             vabs = vabs1
+#         #print('vitesse radiale',v)
+#         # print('vabs',vabs)
+#         # print('vreal',vect2[m,3])
+#         # print((phi2 - phi1)/dt)
+#         # print((theta2 - theta1)/dt)
+#         #if vabs >15:
+#             #vectcor[7] = vect1[7]
+#         #print('vtrue',(vect2[m,3]))
+#         #print('vestim',vabs)
+#         #print(vectcor)
+#         vectcor[count,7] = vabs
+#         count +=1
+#     return vectcor
+def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
+    
+    theta_rad,phi_rad = vect2[4:6]
+    theta_cam,phi_cam = vect2[1:3]
+    
+    pitch= -12.999994000000001
+    yaw = -2.5
+    
+    lam = 3e8/f0 
+    ambphi = lam*180/(dx*np.pi) #32.554420177887685 
+    ambtheta = lam*180/(dy*np.pi)#17.904931097838226
+    nx = np.rint((phi_cam - phi_rad)/ambphi)
+    nz = np.rint((theta_cam - theta_rad)/ambtheta)
+   
+    phi_rad += (nx)*ambphi
+    theta_rad += (nz)*ambtheta
+    
+    # if np.abs(phi_cam - phi_rad) < ambphi:
+    #     phi1 = phi_rad
+    #     phi1 += ambphi*np.sign(nx)
+    #     if np.abs(phi1 - phi_cam) < np.abs(phi_rad - phi_cam):
+    #         phi_rad = phi1
+            
+    # if np.abs(theta_cam - theta_rad) <ambtheta:
+    #     theta1 = theta_rad
+    #     theta1 += ambtheta * np.sign(nz)
+    #     if np.abs(theta1 - theta_cam)> np.abs(theta_rad - theta_cam):
+    #         theta_rad = theta1
+    #while( phi_cam - phi_rad > ambphi/2):
+    #     phi_rad += ambphi
+    # while(theta_cam - theta_rad >ambtheta/2) :
+    #     theta_rad += ambtheta
+        
+    #d,theta,phi,v
+   
+    vectcor = vect2
+    vectcor[4:6] = [theta_rad,phi_rad]
+    return vectcor    
+
 def correctionvitesse(vect1,vect2,dt = 1/30):
     
-    """Etape d'assoc"""
-    vectcor = np.zeros((vect2.shape))
-    min_dist = np.ones((vect2.shape[0]))*500
-    index = np.zeros((vect2.shape[0]))
-    #print(vect1)
-    if vect1 is None:
-        return vect2
-    for i in range(vect1.shape[0]):
-        for j in range(vect2.shape[0]):
-            l = (vect1[i,0] - vect2[j,0])**2 
+    vectcor = vect2
+    d = vect2[3]
+    #d1=vect1[count,4]
+    v = vect2[6]
+    theta1 = vect1[4]*np.pi/180
+    theta2 = vect2[4]*np.pi/180
     
-            if min_dist[j] >l:
-                min_dist[j] = l 
-                index[j] = j
-    index = np.int_(index)
-    count = 0
-    """"facon 1"""
-    for m  in index:
-        vectcor[count,:] = vect2[m]
-        d = vect2[m,0]
-        d1=vect1[count,4]
-        v = vect2[m,7]
-        theta1 = vect1[count,1]*np.pi/180
-        theta2 = vect2[m,1]*np.pi/180
-        
-        phi1 = vect1[count,2]*np.pi/180
-        phi2 = vect2[m,2]*np.pi/180
-        #print(vect2[m,0])
-        vabs = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2)
-        #vabs = v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2
-        #print('vabs',vabs)
-        if vabs > 20:
-            for n in index:
-                if not count == n:
-                    
-                    d = vect2[m,0]
-        
-                    v = vect2[m,7]
-                    theta1 = vect1[n,1]*np.pi/180
-                    theta2 = vect2[m,1]*np.pi/180
-        
-                    phi1 = vect1[n,2]*np.pi/180
-                    phi2 = vect2[m,2]*np.pi/180
-                    vabs1 = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2)
-                    #print(vabs1)
-                    if vabs1 < 20:
-                        vabs = vabs1
-        #print('vitesse radiale',v)
-        # print('vabs',vabs)
-        # print('vreal',vect2[m,3])
-        # print((phi2 - phi1)/dt)
-        # print((theta2 - theta1)/dt)
-        #if vabs >15:
-            #vectcor[7] = vect1[7]
-        #print('vtrue',(vect2[m,3]))
-        #print('vestim',vabs)
-        #print(vectcor)
-        vectcor[count,7] = vabs
-        count +=1
+    phi1 = vect1[5]*np.pi/180
+    phi2 = vect2[5]*np.pi/180
+    #print(vect2[m,0])
+    vabs = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2)
+    
+    #print('vitesse radiale',v)
+    # print('vabs',vabs)
+    # print('vreal',vect2[m,3])
+    # print((phi2 - phi1)/dt)
+    # print((theta2 - theta1)/dt)
+    #if vabs >15:
+        #vectcor[7] = vect1[7]
+    #print('vtrue',(vect2[m,3]))
+    #print('vestim',vabs)
+    #print(vectcor)
+    vectcor[6] = vabs
+    
     return vectcor
+# 
+
+def correction(vect1,vect2,dt = 1/30):
+    vect1 = correctionAngle(vect1)
+    vect2 = correctionAngle(vect2)
+    return correctionvitesse(vect1,vect2,dt = dt)
 
 if __name__ == '__main__':
    dataxee = pd.read_csv('data_est.csv',sep=';').values

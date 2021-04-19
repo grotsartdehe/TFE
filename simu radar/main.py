@@ -186,7 +186,7 @@ if __name__ == '__main__':
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
         
-            n = 1450
+            n = 1560
             if  counter == n  or( counter > n and counter<(n+5)) :
                  
                 file = os.path.join(csv_folder,i)
@@ -213,8 +213,9 @@ if __name__ == '__main__':
                                 min_dist[i] = l 
                                 index[i] = j
                 
-                table = np.zeros((test.shape[0],8))
-                newtab= np.zeros((test.shape[0],8))
+                table = np.zeros((test.shape[0],7))
+                newtab= np.zeros((test.shape[0],7))
+                tab0= np.zeros((test.shape[0],7))
                 count= 0
                 index = np.int_(index)
                 v_real = v_real.values
@@ -224,22 +225,23 @@ if __name__ == '__main__':
                     table[count,0]=d_real[m]
                     table[count,1]=theta[m]*180/np.pi
                     table[count,2]=phi[m]*180/np.pi
-                    table[count,3]=v_abs[m]
-                    table[count,4::]=test[count,:]
-                    table[count,7]=v_real[m]
+                    #table[count,3]=v_abs[m]
+                    table[count,3::]=test[count,:]
+                    table[count,6]=v_real[m]
                     #print('vrad',v_real[m])
                     count+=1 
                 #print('detection',len(index))
+                
                 for i in range(table.shape[0]):
                     
-                    newtab[i,:] = correctionAngle(table[i,:])
+                    newtab[i,:] = correction(tab0[i,:],table[i,:])
                 #print(newtab)
-                if counter > n:
-                    newtab= correctionvitesse(tab0,newtab)
-                       #print('boucle')
+                # if counter > n:
+                #     newtab= correctionvitesse(tab0,newtab)
+                #        #print('boucle')
                 
                 tab0 = newtab
-                #print(newtab)
+                print(newtab)
             counter += 1
                 
                 
