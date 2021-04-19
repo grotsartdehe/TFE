@@ -490,7 +490,7 @@ def aire(data1,data2):
     return aire*100
         
 #Fonction principale qui lance toutes les sous fonctions
-count = 1078#test de la frame 2437
+count = 1567#test de la frame 2437
 points_X = []
 points_Y = []
 points_Z = []
