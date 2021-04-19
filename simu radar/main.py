@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 from tools import heatmap
 from Search import *
+from correction import *
 import pickle
 
 def extract(df,pos_cam):
@@ -25,7 +26,8 @@ def extract(df,pos_cam):
     d : liste of distance.
     v : liste de vitesse
     theta : angle azimutale
-    phi : angle d'élevation
+    phi : angle d'élevationmain.py
+    
     """
     Xpos1 = (df['XPos']-pos_cam[1])/100
     Ypos1 = (df['YPos']-pos_cam[2])/100
@@ -62,10 +64,10 @@ def extract(df,pos_cam):
     
     #projection orthogonale
     norm =  np.sqrt(Xposdir**2 + Yposdir**2 + Zposdir**2) 
-    Vdir = (Xdir*Xposdir + Ydir*Yposdir)/norm # diviser par norm = 1
+    Vdir = (Xdir*Xposdir + Ydir*Yposdir+Zdir*Zposdir)/norm # diviser par norm = 1
     
     
-    
+    #print(np.arccos(Vdir/v)*180/np.pi)
    
     
     theta = np.arccos(Zpos/d) 
@@ -74,14 +76,14 @@ def extract(df,pos_cam):
     v1 = v*Vdir
     
     xsi = np.arctan2(Ydir,Xdir)
-    
+    #print(xsi*180/np.pi)
     store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
     
-    print(store)
+    #print(store)
     
    
     
-    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond]+pi/2
+    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond]#+pi/2
     
     
     
@@ -167,7 +169,7 @@ def CreateandSearch(FX_csv,pos_cam):
     lister = np.zeros((d_esti.shape[0],4))
     for i in range(len(d_esti)):
         lister[i,:]=d_esti[i],(theta_esti[i])*180/pi,phi_esti[i]*180/pi,v_esti[i]
-    print(lister)
+    #print(lister)
     return lister
         
         
@@ -184,14 +186,60 @@ if __name__ == '__main__':
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
         
-            
-            
-            if  counter == 1200:
+            n = 1450
+            if  counter == n  or( counter > n and counter<(n+5)) :
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
+                df = pd.read_csv(file,sep =';',index_col=False )
+                v_abs = df['Vel']/100
+                
+                d_real,v_real,theta,phi,classcar,xsi = extract(df,pos_cam)
+                v_abs = df['Vel']/100 
+                v_abs = v_abs[v_real.index].values
+                
                 test = CreateandSearch(file,pos_cam)
-                #print(test)
+                
+                if test.shape[0]>0:
+                    min_dist = np.ones((test.shape[0]))*500
+                    index = np.zeros((test.shape[0]))
+                    
+                    for i in range(test.shape[0]):
+                        for j in range(len(d_real)):
+
+                            l = (test[i,0] - d_real[j])**2 #+ (v_esti[i] - v_real[j])**2
+
+                            if min_dist[i] >l:
+                                min_dist[i] = l 
+                                index[i] = j
+                
+                table = np.zeros((test.shape[0],8))
+                newtab= np.zeros((test.shape[0],8))
+                count= 0
+                index = np.int_(index)
+                v_real = v_real.values
+                
+                for m in index:
+                    
+                    table[count,0]=d_real[m]
+                    table[count,1]=theta[m]*180/np.pi
+                    table[count,2]=phi[m]*180/np.pi
+                    table[count,3]=v_abs[m]
+                    table[count,4::]=test[count,:]
+                    table[count,7]=v_real[m]
+                    #print('vrad',v_real[m])
+                    count+=1 
+                #print('detection',len(index))
+                for i in range(table.shape[0]):
+                    
+                    newtab[i,:] = correctionAngle(table[i,:])
+                #print(newtab)
+                if counter > n:
+                    newtab= correctionvitesse(tab0,newtab)
+                       #print('boucle')
+                
+                tab0 = newtab
+                #print(newtab)
             counter += 1
                 
                 

@@ -162,7 +162,7 @@ Argument:
     # la convention de wiki pedia avec theta partant de l'axe z sur le planxy
     #print(u0,v0)
     k = 2* np.pi*24e9/3e8
-    N = 2*256
+    N = 4*256
     x = np.linspace(-1, 1, N)
     y = np.linspace(-1, 1, N)
     X, Y = np.meshgrid(x,y)
@@ -172,8 +172,8 @@ Argument:
     #mean = 1.4414414-0.6486486j
     #cov = 2942.9300506820273+596.4310917456352j
     mean  = 0 + 0j
-    cov = 1 + 1j
-    x = 10 + 10j #np.random.normal(loc = np.real(mean),scale = np.real(cov),size = 3) +\
+    cov = 0.001 + 0.001j
+    x = 20 + 20j #+np.random.normal(loc = np.real(mean),scale = np.real(cov),size = 3) +\
         #1j*np.random.normal(loc = np.imag(mean),scale = np.imag(cov),size = 3)
     
     signal = x*np.exp(1j*k*(ux*dx+vz*dz))
