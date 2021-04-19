@@ -7,44 +7,44 @@ Created on Fri Apr  9 16:00:02 2021
 """
 import pandas as pd
 import numpy as np
-def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
+# def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     
-    theta_rad,phi_rad = vect2[4:6]
-    theta_cam,phi_cam = vect2[1:3]
+#     theta_rad,phi_rad = vect2[4:6]
+#     theta_cam,phi_cam = vect2[1:3]
     
-    pitch= -12.999994000000001
-    yaw = -2.5
+#     pitch= -12.999994000000001
+#     yaw = -2.5
     
-    lam = 3e8/f0 
-    ambphi = lam*180/(dx*np.pi) #32.554420177887685 
-    ambtheta = lam*180/(dy*np.pi)#17.904931097838226
-    nx = np.rint((phi_cam - phi_rad)/ambphi)
-    nz = np.rint((theta_cam - theta_rad)/ambtheta)
+#     lam = 3e8/f0 
+#     ambphi = lam*180/(dx*np.pi) #32.554420177887685 
+#     ambtheta = lam*180/(dy*np.pi)#17.904931097838226
+#     nx = np.rint((phi_cam - phi_rad)/ambphi)
+#     nz = np.rint((theta_cam - theta_rad)/ambtheta)
    
-    phi_rad += (nx)*ambphi
-    theta_rad += (nz)*ambtheta
+#     phi_rad += (nx)*ambphi
+#     theta_rad += (nz)*ambtheta
     
-    # if np.abs(phi_cam - phi_rad) < ambphi:
-    #     phi1 = phi_rad
-    #     phi1 += ambphi*np.sign(nx)
-    #     if np.abs(phi1 - phi_cam) < np.abs(phi_rad - phi_cam):
-    #         phi_rad = phi1
+#     # if np.abs(phi_cam - phi_rad) < ambphi:
+#     #     phi1 = phi_rad
+#     #     phi1 += ambphi*np.sign(nx)
+#     #     if np.abs(phi1 - phi_cam) < np.abs(phi_rad - phi_cam):
+#     #         phi_rad = phi1
             
-    # if np.abs(theta_cam - theta_rad) <ambtheta:
-    #     theta1 = theta_rad
-    #     theta1 += ambtheta * np.sign(nz)
-    #     if np.abs(theta1 - theta_cam)> np.abs(theta_rad - theta_cam):
-    #         theta_rad = theta1
-    #while( phi_cam - phi_rad > ambphi/2):
-    #     phi_rad += ambphi
-    # while(theta_cam - theta_rad >ambtheta/2) :
-    #     theta_rad += ambtheta
+#     # if np.abs(theta_cam - theta_rad) <ambtheta:
+#     #     theta1 = theta_rad
+#     #     theta1 += ambtheta * np.sign(nz)
+#     #     if np.abs(theta1 - theta_cam)> np.abs(theta_rad - theta_cam):
+#     #         theta_rad = theta1
+#     #while( phi_cam - phi_rad > ambphi/2):
+#     #     phi_rad += ambphi
+#     # while(theta_cam - theta_rad >ambtheta/2) :
+#     #     theta_rad += ambtheta
         
-    #d,theta,phi,v
+#     #d,theta,phi,v
    
-    vectcor = vect2
-    vectcor[4:6] = [theta_rad,phi_rad]
-    return vectcor
+#     vectcor = vect2
+#     vectcor[4:6] = [theta_rad,phi_rad]
+#     return vectcor
 
 # def correctionvit(vect1,vect2,dt = 1/30):
     
@@ -130,7 +130,7 @@ def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     # vabs = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d * np.sin(theta2)* (phi2 - phi1)/dt)**2)
     # vectcor[7] = vabs
     # print('methode4',vabs)
-    """facon 5"""
+    #""facon 5"""
     # print('v_true=',vect2[3])
     # print('v_rad=',vect2[7])
     # print(vect2[0:4],vect2[7])
@@ -273,8 +273,7 @@ def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     theta_rad,phi_rad = vect2[4:6]
     theta_cam,phi_cam = vect2[1:3]
     
-    pitch= -12.999994000000001
-    yaw = -2.5
+    
     
     lam = 3e8/f0 
     ambphi = lam*180/(dx*np.pi) #32.554420177887685 
@@ -285,24 +284,6 @@ def correctionAngle(vect2,dx = 0.022,dy = 0.04,f0=24e9):
     phi_rad += (nx)*ambphi
     theta_rad += (nz)*ambtheta
     
-    # if np.abs(phi_cam - phi_rad) < ambphi:
-    #     phi1 = phi_rad
-    #     phi1 += ambphi*np.sign(nx)
-    #     if np.abs(phi1 - phi_cam) < np.abs(phi_rad - phi_cam):
-    #         phi_rad = phi1
-            
-    # if np.abs(theta_cam - theta_rad) <ambtheta:
-    #     theta1 = theta_rad
-    #     theta1 += ambtheta * np.sign(nz)
-    #     if np.abs(theta1 - theta_cam)> np.abs(theta_rad - theta_cam):
-    #         theta_rad = theta1
-    #while( phi_cam - phi_rad > ambphi/2):
-    #     phi_rad += ambphi
-    # while(theta_cam - theta_rad >ambtheta/2) :
-    #     theta_rad += ambtheta
-        
-    #d,theta,phi,v
-   
     vectcor = vect2
     vectcor[4:6] = [theta_rad,phi_rad]
     return vectcor    
@@ -321,16 +302,6 @@ def correctionvitesse(vect1,vect2,dt = 1/30):
     #print(vect2[m,0])
     vabs = np.sqrt(v**2 + (d*(theta2 - theta1)/dt)**2 + (d*np.sin(theta2)* (phi2 - phi1)/dt)**2)
     
-    #print('vitesse radiale',v)
-    # print('vabs',vabs)
-    # print('vreal',vect2[m,3])
-    # print((phi2 - phi1)/dt)
-    # print((theta2 - theta1)/dt)
-    #if vabs >15:
-        #vectcor[7] = vect1[7]
-    #print('vtrue',(vect2[m,3]))
-    #print('vestim',vabs)
-    #print(vectcor)
     vectcor[6] = vabs
     
     return vectcor
@@ -339,6 +310,10 @@ def correctionvitesse(vect1,vect2,dt = 1/30):
 def correction(vect1,vect2,dt = 1/30):
     vect1 = correctionAngle(vect1)
     vect2 = correctionAngle(vect2)
+    if vect1 is None:
+        return vect2
+    if vect2 is None:
+        return vect2
     return correctionvitesse(vect1,vect2,dt = dt)
 
 if __name__ == '__main__':
