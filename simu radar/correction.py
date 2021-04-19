@@ -309,7 +309,9 @@ def correctionvitesse(vect1,vect2,dt = 1/30):
 
 def correction(vect1,vect2,dt = 1/30):
     vect1 = correctionAngle(vect1)
+    print('vect2 avant',vect2)
     vect2 = correctionAngle(vect2)
+    print('vect2',vect2)
     if vect1 is None:
         return vect2
     if vect2 is None:

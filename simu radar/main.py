@@ -32,6 +32,9 @@ def extract(df,pos_cam):
     Xpos1 = (df['XPos']-pos_cam[1])/100
     Ypos1 = (df['YPos']-pos_cam[2])/100
     Zpos1 = (df['ZPos']-pos_cam[3])/100
+    Xpos2D = df['2D_XPos'].values
+    Ypos2D = df['2D_YPos'].values
+    print('Xpos2D',Xpos2D,Ypos2D)
     pitch =  pos_cam[5]*np.pi/180
     # print(pos_cam[5])
     # print(pos_cam[6])
@@ -40,7 +43,8 @@ def extract(df,pos_cam):
     Ry = np.array([[np.cos(pitch),0, np.sin(pitch)],[0,1,0],[-np.sin(pitch),0,np.cos(pitch)]])
     R = Rz@Ry
     
-    Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
+    #Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
+    Posnew =  np.array([Xpos1,Ypos1,Zpos1])
     Xpos = Posnew[0,:]
     Ypos = Posnew[1,:]
     Zpos = Posnew[2,:]
@@ -50,14 +54,23 @@ def extract(df,pos_cam):
     Xposdir = Xpos/d
     Yposdir = Ypos/d
     Zposdir = Zpos/d
-    cond = d < 70
+    W = 1920
+    H = 1280
+    cond2 = (Xpos2D >= 0) & (Xpos2D <= W) & (Ypos2D >= 0) & (Ypos2D <= H)
+    Xpos2D = Xpos2D[cond2]
+    Ypos2D = Ypos2D[cond2]
+    print('new',Xpos2D,Ypos2D)
+    cond = (d < 70) * cond2
+    print('cond',cond)
+    
     
     v = df['Vel']/100
     
     Xdir = df['XDir']
     Ydir = df['YDir']
     Zdir= df['ZDir']
-    Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
+    #Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
+    Dirnew =  np.array([Xdir,Ydir,Zdir])
     Xdir = Dirnew[0]
     Ydir = Dirnew[1]
     Zdir= Dirnew[2]
@@ -72,6 +85,7 @@ def extract(df,pos_cam):
     
     theta = np.arccos(Zpos/d) 
     phi = np.arctan2(Ypos,Xpos)
+    
     classcar = df['ID']
     v1 = v*Vdir
     
@@ -79,7 +93,7 @@ def extract(df,pos_cam):
     #print(xsi*180/np.pi)
     store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
     
-    #print(store)
+    print('create',store)
     
    
     
@@ -127,15 +141,16 @@ def CreateandSearch(FX_csv,pos_cam):
     # print("estimé",v_esti)
     
     if len(d_esti)>0:
-        min_dist = np.ones((d_esti.size))*500
+        min_dist = np.ones((d_esti.size))*5000
         index = np.zeros((d_esti.size))
         for i in range(len(d_esti)):
             for j in range(len(d_real)):
-                    
+                    print('d_esti',d_esti)
+                    print('d_real',d_real)
                     
                 
                     
-                    l = (d_esti[i] - d_real[j])**2 #+ (v_esti[i] - v_real[j])**2
+                    l = (d_esti[i] - d_real[j])**2 + (v_esti[i] - v_real[j])**2
                    
                     
                     if min_dist[i] >l:
@@ -149,11 +164,13 @@ def CreateandSearch(FX_csv,pos_cam):
         return []
     """Generation et recherche des angles theta, phi limité dans l'espace 
     d'ambiguité"""
+    
     theta_esti = np.array(np.zeros((d_esti.shape)))
     
     phi_esti = np.array(np.zeros((d_esti.shape)))
     count = 0
     index = np.int_(index)
+    print('index',index)
     for m in index:
         
         Z = ambiguite(theta[m],phi[m])
