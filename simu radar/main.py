@@ -34,7 +34,6 @@ def extract(df,pos_cam):
     Zpos1 = (df['ZPos']-pos_cam[3])/100
     Xpos2D = df['2D_XPos'].values
     Ypos2D = df['2D_YPos'].values
-    print('Xpos2D',Xpos2D,Ypos2D)
     pitch =  pos_cam[5]*np.pi/180
     # print(pos_cam[5])
     # print(pos_cam[6])
@@ -59,9 +58,7 @@ def extract(df,pos_cam):
     cond2 = (Xpos2D >= 0) & (Xpos2D <= W) & (Ypos2D >= 0) & (Ypos2D <= H)
     Xpos2D = Xpos2D[cond2]
     Ypos2D = Ypos2D[cond2]
-    print('new',Xpos2D,Ypos2D)
     cond = (d < 70) * cond2
-    print('cond',cond)
     
     
     v = df['Vel']/100
@@ -93,7 +90,6 @@ def extract(df,pos_cam):
     #print(xsi*180/np.pi)
     store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
     
-    print('create',store)
     
    
     
@@ -145,8 +141,6 @@ def CreateandSearch(FX_csv,pos_cam):
         index = np.zeros((d_esti.size))
         for i in range(len(d_esti)):
             for j in range(len(d_real)):
-                    print('d_esti',d_esti)
-                    print('d_real',d_real)
                     
                 
                     
@@ -170,7 +164,6 @@ def CreateandSearch(FX_csv,pos_cam):
     phi_esti = np.array(np.zeros((d_esti.shape)))
     count = 0
     index = np.int_(index)
-    print('index',index)
     for m in index:
         
         Z = ambiguite(theta[m],phi[m])

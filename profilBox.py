@@ -65,15 +65,15 @@ while(os.path.isfile('C:/Users/Gauthier_Rotsart/Downloads/data-CC/00_'+str(count
 #tt = np.histogram(aire,d,density=True)
 #H, xedges, yedges = np.histogram2d(aire,d[d<0.01])
 #plt.imshow(H.T, interpolation='nearest', origin='lower',extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
-#plt.plot(d,aire)
+plt.plot(d,aire)
 #plt.xlabel('Changement de distance')
 #plt.ylabel('Changement d aire')
-#plt.xlim([-0.01,0.01])
+#plt.xlim([-10,10])
 a = (set(d))
 b = np.array(list(a))
 order = b.argsort()
 sorted_b = np.take(b, order, 0)
-plt.hist(aire,bins=sorted_b)
+#plt.hist(aire,bins=sorted_b)
 
 
 #plt.hist(aire,b)
