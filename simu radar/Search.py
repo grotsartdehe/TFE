@@ -113,11 +113,11 @@ def Searchdv(Z,row,col):
         Z = getzeroed(Z,x//row,x%row)
         #plotDV(Z)
     if np.size(result)==0:
-        return [], []
+        return [], [],[],[]
     lignes,colonnes = np.unravel_index(result, (row,col))
     d = lignes* (c/(4*BW))
     v = (colonnes - col/2)*(c*np.pi*f_s/(2*w_0*N_s*256))
-    return d,v
+    return d,v,lignes,colonnes
     
 # def Search(picklefile,folder):
 #     infile = open(picklefile,'rb')

@@ -1,10 +1,11 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
+
 import math
 import argparse
 import numpy as np
-
+import pandas as pd
 # classes utilitaires
 
 class LayerNorm(nn.Module):
@@ -264,19 +265,25 @@ class Net(nn.Module):
 
 args = argparse.Namespace()
 args.LAYER = 4
-args.HIDDEN_SIZE = 512
+args.HIDDEN_SIZE = 8#512
 args.FLAT_OUT_SIZE = 512
-args.FF_SIZE = 2048
-args.MULTI_HEAD = 8
+args.FF_SIZE = 512 #2048
+args.MULTI_HEAD = 2 #8
 args.DROPOUT_R = 0.1
 
 
 
 net = Net(args)
+#torch.set_default_dtype(torch.float64)
+
 x = np.zeros((10, 50, 512), dtype=np.float32) # batch x N x Features
 y = np.zeros((10, 20, 512), dtype=np.float32) # batch x N x Features
-x = torch.from_numpy(x)
-y = torch.from_numpy(y)
+
+x  = pd.read_csv('data_est.csv',sep = ';', header = None).values
+y = pd.read_csv('data.csv',sep = ';',header = None).values
+print('ok')
+x = torch.from_numpy(x[0:512,1:9])
+y = torch.from_numpy(y[0:512,1:9])
 out = net(x,y)
 print(out)
 print(out.shape) # [10,2]
