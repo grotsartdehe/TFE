@@ -93,7 +93,7 @@ def extract(df,pos_cam):
     
    
     
-    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond]#+pi/2
+    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond],v[cond]#+pi/2
     
     
     
@@ -120,11 +120,12 @@ def CreateandSearch(FX_csv,pos_cam):
     
     """ extractions des données de FX"""
     data = pd.read_csv(FX_csv,sep =';',index_col=False )
-    d_real,v_real,theta,phi,classcar,xsi = extract(data,pos_cam)
+    d_real,v_real,theta,phi,classcar,xsi,vabs = extract(data,pos_cam)
     v_real = v_real.values
     """Generation et recherche dsitance, vitessede heatmap d,v"""
-    Zdv = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi)
-    d_esti,v_esti = Searchdv(Zdv,256,256)
+    Zdv,Za = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi,vabs.values)
+    d_esti,v_esti,lignes, colonnes = Searchdv(Zdv,256,256)
+    
     #plotDV(Zdv)
     
     # if not  type(d_esti) == list:
@@ -136,39 +137,46 @@ def CreateandSearch(FX_csv,pos_cam):
     # print("real vitesse rad", v_real.values)
     # print("estimé",v_esti)
     
-    if len(d_esti)>0:
-        min_dist = np.ones((d_esti.size))*5000
-        index = np.zeros((d_esti.size))
-        for i in range(len(d_esti)):
-            for j in range(len(d_real)):
+    # # if len(d_esti)>0:
+    #     min_dist = np.ones((d_esti.size))*5000
+    #     index = np.zeros((d_esti.size))
+    #     for i in range(len(d_esti)):
+    #         for j in range(len(d_real)):
                     
                 
                     
-                    l = (d_esti[i] - d_real[j])**2 + (v_esti[i] - v_real[j])**2
+    #                 l = (d_esti[i] - d_real[j])**2 + (v_esti[i] - v_real[j])**2
                    
                     
-                    if min_dist[i] >l:
-                        min_dist[i] = l 
+    #                 if min_dist[i] >l:
+    #                     min_dist[i] = l 
                        
-                        index[i] = j
-            #print(d_esti[i],d_real[int(index[i])])
+    #                     index[i] = j
+    #         #print(d_esti[i],d_real[int(index[i])])
         
-    else :
+    # else :
         
-        return []
+    #     return []
     """Generation et recherche des angles theta, phi limité dans l'espace 
     d'ambiguité"""
-    
+    index = Za[lignes,colonnes] -2
+    # plotDV(Zdv)
+    # plotDV(Za)
+    if len(d_esti)==0:
+        return []
     theta_esti = np.array(np.zeros((d_esti.shape)))
     
     phi_esti = np.array(np.zeros((d_esti.shape)))
     count = 0
     index = np.int_(index)
     for m in index:
-        
-        Z = ambiguite(theta[m],phi[m])
-        #plotAngles(Z)
-        theta_esti[count],phi_esti[count] = Searchangle(Z )
+        if m ==-1:
+            Z= np.random.normal((256,256))
+            theta_esti[count],phi_esti[count] = Searchangle(Z )
+        else:
+            Z = ambiguite(theta[m],phi[m])
+            #plotAngles(Z)
+            theta_esti[count],phi_esti[count] = Searchangle(Z )
         
         count +=1
     # print('real phi',phi*180/pi)
@@ -196,7 +204,7 @@ if __name__ == '__main__':
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
         
-            n = 1560
+            n = 1506
             if  counter == n  or( counter > n and counter<(n+5)) :
                  
                 file = os.path.join(csv_folder,i)
@@ -204,12 +212,13 @@ if __name__ == '__main__':
                 df = pd.read_csv(file,sep =';',index_col=False )
                 v_abs = df['Vel']/100
                 
-                d_real,v_real,theta,phi,classcar,xsi = extract(df,pos_cam)
+                d_real,v_real,theta,phi,classcar,xsi,vabs = extract(df,pos_cam)
                 v_abs = df['Vel']/100 
                 v_abs = v_abs[v_real.index].values
                 
                 test = CreateandSearch(file,pos_cam)
-                
+                if len(test)==0:
+                    continue
                 if test.shape[0]>0:
                     min_dist = np.ones((test.shape[0]))*500
                     index = np.zeros((test.shape[0]))
