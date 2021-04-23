@@ -551,7 +551,7 @@ def lissage(data1,data2,d):
 #Fonction principale qui lance toutes les sous fonctions
 cam_number = 1
 name_data = 'data_jour'
-count = 1078#test de la frame 2437
+count = 1595#test de la frame 2437
 
 csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
 pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
