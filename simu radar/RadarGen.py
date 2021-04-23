@@ -136,7 +136,7 @@ phi = np.pi/8
 
 
 
-def ambiguite(theta,phi,dux=0.3125,duy=0.568):
+def ambiguite(theta,phi,dux=0.3125,duy=0.568,cam_number=0):
     """
 Ambiguité renvoie l'ampltude '
 Argument:
@@ -151,11 +151,17 @@ Argument:
     
     #plt.figure()
     # if theta <0:
-    #     u0 = np.cos(-pi/2 - theta)*np.sin(phi)
-    #     v0 = np.sin(-pi/2 - theta)
+    #      u0 = np.cos(-pi/2 - theta)*np.sin(phi)
+    #      v0 = np.sin(-pi/2 - theta)
     # else:
-    ux = np.cos(pi/2- theta)*np.sin(phi)
-    vz = np.sin(pi/2 - theta)
+    # ux = np.cos(pi/2- theta)*np.sin(phi)
+    # vz = np.sin(pi/2 - theta)
+    if cam_number == 1 or cam_number == 2:
+        ux = np.cos(pi/2- theta)*np.cos(phi)
+        vz = np.sin(pi/2 - theta) 
+    else:
+        ux = np.cos(pi/2- theta)*np.sin(phi)
+        vz = np.sin(pi/2 - theta)
     # vz = np.cos(theta)
     # ux = np.sin(phi)
     #print('ux=',ux,'v0=',vz)
@@ -182,9 +188,9 @@ Argument:
     Z = signal[0]*np.exp(-1j*k*(X*dx[0]+Y*dz[0]))+\
         signal[1]*np.exp(-1j*k*(X*dx[1]+Y*dz[1]))+\
             signal[2]*np.exp(-1j*k*(X*dx[2]+Y*dz[2]))
-    # m = Z[128:167,128:199]
+    m = Z[128:167,128:199]
     # plt.figure()
-    # plt.contourf(X[128:167,128:199],Y[128:167,128:199],np.abs(m))
+    #plt.contourf(X[128:167,128:199],Y[128:167,128:199],np.abs(m))
     # plt.title('abs')
     # plt.figure()
     # plt.contourf(X[128:167,128:199],Y[128:167,128:199],np.real(m))

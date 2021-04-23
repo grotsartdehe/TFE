@@ -35,15 +35,14 @@ def extract(df,pos_cam):
     Xpos2D = df['2D_XPos'].values
     Ypos2D = df['2D_YPos'].values
     pitch =  -pos_cam[5]*np.pi/180
-    # print(pos_cam[5])
-    # print(pos_cam[6])
+    
     yaw = -pos_cam[6]*np.pi/180
     Rz =np.array( [[np.cos(yaw),-np.sin(yaw),0],[np.sin(yaw),np.cos(yaw),0],[0,0,1]])
     Ry = np.array([[np.cos(pitch),0, np.sin(pitch)],[0,1,0],[-np.sin(pitch),0,np.cos(pitch)]])
     R = Rz@Ry
     
-    Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
-    #Posnew =  np.array([Xpos1,Ypos1,Zpos1])
+    #Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
+    Posnew =  np.array([Xpos1,Ypos1,Zpos1])
     Xpos = Posnew[0,:]
     Ypos = Posnew[1,:]
     Zpos = Posnew[2,:]
@@ -66,8 +65,8 @@ def extract(df,pos_cam):
     Xdir = df['XDir']
     Ydir = df['YDir']
     Zdir= df['ZDir']
-    Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
-    #Dirnew =  np.array([Xdir,Ydir,Zdir])
+    #Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
+    Dirnew =  np.array([Xdir,Ydir,Zdir])
     Xdir = Dirnew[0]
     Ydir = Dirnew[1]
     Zdir= Dirnew[2]
@@ -97,7 +96,7 @@ def extract(df,pos_cam):
     
     
     
-def CreateandSearch(FX_csv,pos_cam):
+def CreateandSearch(FX_csv,pos_cam,cam_number = 0):
     """
     
 
@@ -146,14 +145,17 @@ def CreateandSearch(FX_csv,pos_cam):
         if m ==-1:
             Z= np.random.normal((256,256))
             print('random')
-            theta_esti[count],phi_esti[count] = Searchangle(Z )
+            theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number )
         else:
             
-            Z = ambiguite(theta[m],phi[m])
+            Z = ambiguite(theta[m],phi[m],cam_number=cam_number)
             #plotAngles(Z)
-            theta_esti[count],phi_esti[count] = Searchangle(Z )
-
-        
+            theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number=cam_number )
+            print('true angles',theta[m]*180/pi,phi[m]*180/pi)
+            print('false angles',theta_esti[count]*180/pi,phi_esti[count]*180/pi)
+            vect2 = [0,theta[m]*180/pi,phi[m]*180/pi,0,theta_esti[count]*180/pi,phi_esti[count]*180/pi,0]
+            vect2 = correctionAngle(vect2)
+            print(vect2)
         count +=1
     # print('real phi',phi*180/pi)
     # print('estim phi',phi_esti*180/pi)
@@ -168,7 +170,8 @@ def CreateandSearch(FX_csv,pos_cam):
         
         
 if __name__ == '__main__':
-    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_02'
+    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_04'
+    cam_number = int( csv_folder[-1])
     pos_cam = os.path.join(csv_folder,'pos_cam_'+csv_folder[-2:]+'.csv')
     df = pd.read_csv(pos_cam, sep =';')
     
@@ -180,8 +183,8 @@ if __name__ == '__main__':
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
         
-            n = 1580
-            if  counter == n  or( counter > n and counter<(n+3)) :
+            n = 1078
+            if  counter == n  or( counter > n and counter<(n)) :
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
@@ -192,7 +195,7 @@ if __name__ == '__main__':
                 v_abs = df['Vel']/100 
                 v_abs = v_abs[v_real.index].values
                 
-                test = CreateandSearch(file,pos_cam)
+                test = CreateandSearch(file,pos_cam,cam_number)
                 if len(test)==0:
                     print('vecteur est vide')
                     continue

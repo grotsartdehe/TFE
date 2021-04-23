@@ -30,7 +30,7 @@ def getzeroed(Z,row,col,classcar=0,res_d = 0.274):
     return Z
 
 
-def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125):
+def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     result = []
     row = Z.shape[0]
     col = Z.shape[1]
@@ -48,11 +48,11 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125):
     m = Zreal[int(row//2):l0,int(col//2):l3]
     
     # plt.figure()
-    # plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m)
+    #plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m)
     #plt.contourf(X,Y,Z)
     x = np.max(m)
     
-    print(np.where(Z==x))
+    #print(np.where(Z==x))
     ligne,colonne= np.where(Zreal==x)
     
     #ligne,colonne = np.unravel_index(x, (row,col))
@@ -67,6 +67,10 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125):
     theta = np.arccos(v)
     phi = np.arctan2(u,np.sqrt(1-u**2-v**2))
     #print(theta*180/np.pi,phi*180/np.pi)
+    if cam_number == 1 or cam_number ==2:
+        phi = np.arccos(u/np.sin(theta))
+    else:
+        phi = np.arcsin(u/np.sin(theta))
     return theta,phi
 
 def plotDV(Z):
