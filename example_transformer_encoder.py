@@ -4,7 +4,10 @@ import torch
 import math
 import argparse
 import numpy as np
-
+import pandas as pd
+import torch.optim as optim 
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 # classes utilitaires
 
 class LayerNorm(nn.Module):
@@ -264,7 +267,7 @@ class Net(nn.Module):
 
 args = argparse.Namespace()
 args.LAYER = 4
-args.HIDDEN_SIZE = 512
+args.HIDDEN_SIZE = 8#512
 args.FLAT_OUT_SIZE = 512
 args.FF_SIZE = 2048
 args.MULTI_HEAD = 8
@@ -273,8 +276,18 @@ args.DROPOUT_R = 0.1
 
 
 net = Net(args)
-x = np.zeros((10, 50, 512), dtype=np.float32) # batch x N x Features
-y = np.zeros((10, 20, 512), dtype=np.float32) # batch x N x Features
+#x = np.zeros((10, 50, 512), dtype=np.float32) # batch x N x Features
+#y = np.zeros((10, 20, 512), dtype=np.float32) # batch x N x Features
+x = np.zeros((1, 4393, 8)) # batch x N x Features
+y = np.zeros((1, 4393, 4)) # batch x N x Features
+a = pd.read_csv('data_est.csv', sep = ';', header = None).values
+#trainset = torch.utils.data.DataLoader(a, batch_size=10, shuffle=True)
+x[0,:,:] = a[:,1:9]
+b = pd.read_csv('data.csv',sep=';',header = None).values
+y[0,:,:] = b[:,1:5]
+#testset = torch.utils.data.DataLoader(b, batch_size=10, shuffle=False)
+#y = np.array(y[1:513,1],dtype=np.double)
+#y = y.float()
 x = torch.from_numpy(x)
 y = torch.from_numpy(y)
 out = net(x,y)
