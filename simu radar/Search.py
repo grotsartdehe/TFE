@@ -48,9 +48,11 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125):
     m = Zreal[int(row//2):l0,int(col//2):l3]
     
     # plt.figure()
-    # plt.contourf(X[int(row//2):l0,int(col//2):l3],Y[int(row//2):l0,int(col//2):l3],m)
+    # plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m)
+    #plt.contourf(X,Y,Z)
     x = np.max(m)
-    # print(np.where(Z==x))
+    
+    print(np.where(Z==x))
     ligne,colonne= np.where(Zreal==x)
     
     #ligne,colonne = np.unravel_index(x, (row,col))

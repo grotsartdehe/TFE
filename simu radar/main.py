@@ -34,16 +34,16 @@ def extract(df,pos_cam):
     Zpos1 = (df['ZPos']-pos_cam[3])/100
     Xpos2D = df['2D_XPos'].values
     Ypos2D = df['2D_YPos'].values
-    pitch =  pos_cam[5]*np.pi/180
+    pitch =  -pos_cam[5]*np.pi/180
     # print(pos_cam[5])
     # print(pos_cam[6])
-    yaw = pos_cam[6]*np.pi/180
+    yaw = -pos_cam[6]*np.pi/180
     Rz =np.array( [[np.cos(yaw),-np.sin(yaw),0],[np.sin(yaw),np.cos(yaw),0],[0,0,1]])
     Ry = np.array([[np.cos(pitch),0, np.sin(pitch)],[0,1,0],[-np.sin(pitch),0,np.cos(pitch)]])
     R = Rz@Ry
     
-    #Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
-    Posnew =  np.array([Xpos1,Ypos1,Zpos1])
+    Posnew =  R @  np.array([Xpos1,Ypos1,Zpos1])
+    #Posnew =  np.array([Xpos1,Ypos1,Zpos1])
     Xpos = Posnew[0,:]
     Ypos = Posnew[1,:]
     Zpos = Posnew[2,:]
@@ -66,8 +66,8 @@ def extract(df,pos_cam):
     Xdir = df['XDir']
     Ydir = df['YDir']
     Zdir= df['ZDir']
-    #Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
-    Dirnew =  np.array([Xdir,Ydir,Zdir])
+    Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
+    #Dirnew =  np.array([Xdir,Ydir,Zdir])
     Xdir = Dirnew[0]
     Ydir = Dirnew[1]
     Zdir= Dirnew[2]
@@ -126,37 +126,10 @@ def CreateandSearch(FX_csv,pos_cam):
     Zdv,Za = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi,vabs.values)
     d_esti,v_esti,lignes, colonnes = Searchdv(Zdv,256,256)
     
+    
     #plotDV(Zdv)
     
-    # if not  type(d_esti) == list:
-    #     d_esti = np.array([d_esti])
-    #     v_esti = np.array([v_esti])
-    
-    # print("real dist",d_real.values)
-    # print("estimé",d_esti)
-    # print("real vitesse rad", v_real.values)
-    # print("estimé",v_esti)
-    
-    # # if len(d_esti)>0:
-    #     min_dist = np.ones((d_esti.size))*5000
-    #     index = np.zeros((d_esti.size))
-    #     for i in range(len(d_esti)):
-    #         for j in range(len(d_real)):
-                    
-                
-                    
-    #                 l = (d_esti[i] - d_real[j])**2 + (v_esti[i] - v_real[j])**2
-                   
-                    
-    #                 if min_dist[i] >l:
-    #                     min_dist[i] = l 
-                       
-    #                     index[i] = j
-    #         #print(d_esti[i],d_real[int(index[i])])
-        
-    # else :
-        
-    #     return []
+
     """Generation et recherche des angles theta, phi limité dans l'espace 
     d'ambiguité"""
     index = Za[lignes,colonnes] -2
@@ -172,11 +145,14 @@ def CreateandSearch(FX_csv,pos_cam):
     for m in index:
         if m ==-1:
             Z= np.random.normal((256,256))
+            print('random')
             theta_esti[count],phi_esti[count] = Searchangle(Z )
         else:
+            
             Z = ambiguite(theta[m],phi[m])
             #plotAngles(Z)
             theta_esti[count],phi_esti[count] = Searchangle(Z )
+
         
         count +=1
     # print('real phi',phi*180/pi)
@@ -192,8 +168,8 @@ def CreateandSearch(FX_csv,pos_cam):
         
         
 if __name__ == '__main__':
-    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
-    pos_cam = os.path.join(csv_folder,'pos_cam_00.csv')
+    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_02'
+    pos_cam = os.path.join(csv_folder,'pos_cam_'+csv_folder[-2:]+'.csv')
     df = pd.read_csv(pos_cam, sep =';')
     
     pos_cam = df.values[1,:]#[df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
@@ -204,8 +180,8 @@ if __name__ == '__main__':
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
         
-            n = 1506
-            if  counter == n  or( counter > n and counter<(n+5)) :
+            n = 1580
+            if  counter == n  or( counter > n and counter<(n+3)) :
                  
                 file = os.path.join(csv_folder,i)
                 print(file)
@@ -218,6 +194,7 @@ if __name__ == '__main__':
                 
                 test = CreateandSearch(file,pos_cam)
                 if len(test)==0:
+                    print('vecteur est vide')
                     continue
                 if test.shape[0]>0:
                     min_dist = np.ones((test.shape[0]))*500
@@ -260,7 +237,7 @@ if __name__ == '__main__':
                 #        #print('boucle')
                 
                 tab0 = newtab
-                print(newtab)
+                #print(newtab)
             counter += 1
                 
                 
