@@ -47,8 +47,15 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     
     m = Zreal[int(row//2):l0,int(col//2):l3]
     
-    # plt.figure()
-    #plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m)
+    plt.figure()
+    mmax = np.max(m)
+    plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m/mmax)
+    plt.xlabel("cos(phi)")
+    plt.ylabel("cos(theta)")
+    plt.title("Heatmap Angles sans ambiguités")
+    plt.colorbar()
+    plt.show()
+    
     #plt.contourf(X,Y,Z)
     x = np.max(m)
     
@@ -86,19 +93,24 @@ def plotDV(Z):
     X, Y = np.meshgrid(X, Y)
     
     plt.xlim((-vmax,vmax))
-    plt.contourf(X,Y,Z)
+    plt.contourf(X,Y,20*np.log10(np.abs(Z)))
     plt.colorbar()
+    plt.xlabel('vitesse [m/s]')
+    plt.ylabel('distance [m]')
+    plt.title('Heatmap distance vitesse')
     plt.show()
     
 def plotAngles(Z):
     X = np.linspace(-1,1,Z.shape[0])
     Y = np.linspace(-1,1,Z.shape[1])
-    plt.contourf(X,Y,Z)
+    Zmax= np.max(Z)
+    plt.contourf(X,Y,Z/Zmax)
     plt.colorbar()
-    plt.xlabel('cos(theta)')
-    plt.ylabel('cos(phi)')
+    plt.xlabel('cos(phi)')
+    plt.ylabel('cos(theta)')
     plt.title('Heatmap (theta,phi)')
     plt.show()
+    
     
     
 def Searchdv(Z,row,col):
@@ -112,12 +124,14 @@ def Searchdv(Z,row,col):
     while(cond == 0):
         x = np.argmax(Z)
         #print(Z[x//row,x%row])
-        if Z[x//row,x%row] >= 0.7:
+        if Z[x//row,x%row] >= 0.8:
+            
             result.append(x)
+            
         else: 
             cond = 1
         Z = getzeroed(Z,x//row,x%row)
-        #plotDV(Z)
+         #plotDV(Z)
     if np.size(result)==0:
         return [], [],[],[]
     lignes,colonnes = np.unravel_index(result, (row,col))

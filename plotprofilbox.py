@@ -50,22 +50,33 @@ cond1 = A_list <2
 cond = cond1 & cond2
 
 #plt.scatter(A_list[cond],d_list[cond])
-def func(x, a, b,c):
-    return a + b*x+c*x*x 
-x0 = np.zeros(3)
-l = optimization.curve_fit(func, A_list ,d_list, x0)
-print(l)
-#A =  np.histogram2d(A_list[cond],d_list[cond])
+# def func(x, a, b,c):
+#     return a + b*x+c*x*x 
+# x0 = np.zeros(3)
+# l = optimization.curve_fit(func, A_list ,d_list, x0)
+# print(l)
+# #A =  np.histogram2d(A_list[cond],d_list[cond])
 
-plt.scatter(A_list,d_list)
-plt.scatter(A_list,l[0][0]+l[0][1]*A_list+l[0][2]*A_list*A_list)
-plt.xlabel('Delta A')
-plt.ylabel('Delta d')
-plt.title("Evolution de la diff de distance en fonction de la diff d'aire ")
+# plt.scatter(A_list,d_list)
+# plt.scatter(A_list,l[0][0]+l[0][1]*A_list+l[0][2]*A_list*A_list)
+# plt.xlabel('Delta A')
+# plt.ylabel('Delta d')
+# plt.title("Evolution de la diff de distance en fonction de la diff d'aire ")
 plt.figure()
 
-#plt.xlim([-0.5,0.5])
-#plt.ylim([-0.05,0.05])
+# #plt.xlim([-0.5,0.5])
+plt.ylim([-0.2,0.2])
 
-H, xedges = np.histogram2d([A_list,d_list])
+H, xedges,yedges = np.histogram2d(A_list,d_list,density=True)
+X, Y = np.meshgrid(xedges, yedges)
+plt.pcolormesh(X, Y, H.T)
+plt.colorbar()
+
+fig = plt.figure()
+im = plt.NonUniformImage(fig, interpolation='bilinear')
+xcenters = (xedges[:-1] + xedges[1:]) / 2
+ycenters = (yedges[:-1] + yedges[1:]) / 2
+im.set_data(xcenters, ycenters, H)
+fig.images.append(im)
+plt.show()
 

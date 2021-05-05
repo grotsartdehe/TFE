@@ -123,10 +123,11 @@ def CreateandSearch(FX_csv,pos_cam,cam_number = 0):
     v_real = v_real.values
     """Generation et recherche dsitance, vitessede heatmap d,v"""
     Zdv,Za = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi,vabs.values)
+    #plotDV(Zdv)
     d_esti,v_esti,lignes, colonnes = Searchdv(Zdv,256,256)
     
     
-    #plotDV(Zdv)
+    
     
 
     """Generation et recherche des angles theta, phi limité dans l'espace 
@@ -144,18 +145,18 @@ def CreateandSearch(FX_csv,pos_cam,cam_number = 0):
     for m in index:
         if m ==-1:
             Z= np.random.normal((256,256))
-            print('random')
+             #print('random')
             theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number )
         else:
             
             Z = ambiguite(theta[m],phi[m],cam_number=cam_number)
-            #plotAngles(Z)
+            plotAngles(Z)
             theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number=cam_number )
-            print('true angles',theta[m]*180/pi,phi[m]*180/pi)
-            print('false angles',theta_esti[count]*180/pi,phi_esti[count]*180/pi)
+            #print('true angles',theta[m]*180/pi,phi[m]*180/pi)
+            #print('false angles',theta_esti[count]*180/pi,phi_esti[count]*180/pi)
             vect2 = [0,theta[m]*180/pi,phi[m]*180/pi,0,theta_esti[count]*180/pi,phi_esti[count]*180/pi,0]
             vect2 = correctionAngle(vect2)
-            print(vect2)
+            #print(vect2)
         count +=1
     # print('real phi',phi*180/pi)
     # print('estim phi',phi_esti*180/pi)
@@ -170,7 +171,7 @@ def CreateandSearch(FX_csv,pos_cam,cam_number = 0):
         
         
 if __name__ == '__main__':
-    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_04'
+    csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
     cam_number = int( csv_folder[-1])
     pos_cam = os.path.join(csv_folder,'pos_cam_'+csv_folder[-2:]+'.csv')
     df = pd.read_csv(pos_cam, sep =';')
