@@ -410,8 +410,8 @@ def calibration(L,cm,dimension,data,W,H):
 
 def distanceModif(cm,dim,L,W,H):
     beta = 15.75#28
-    cm_norm = cm[1] - H/2#cm[0] - W/2
-    theta1 = (cm_norm- L/2)*beta/H#(cm_norm- L/2)*beta/W
+    cm_norm = cm[0] - W/2#cm[1] - H/2
+    theta1 = (cm_norm- L/2)*beta/W#(cm_norm- L/2)*beta/H
     #theta2 = (cm-W/2)*beta/W
     #xi = cc[0] +L/2 
     #theta2 = xi*beta/W
@@ -420,7 +420,7 @@ def distanceModif(cm,dim,L,W,H):
     
     for i in range((val)):
         xi = cm_norm - L/2 + (2*i+1)
-        theta2 = xi*beta/H#xi*beta/W
+        theta2 = xi*beta/W#xi*beta/H
         N = (i+1)/(val)
         distance[i] = (dim*N)/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
     std = np.std(distance)
@@ -575,7 +575,7 @@ def lissage(data1,data2,d):
 #Fonction principale qui lance toutes les sous fonctions
 cam_number = 0
 name_data = 'data_final'
-count = 400#test de la frame 2437
+count = 515#test de la frame 2437
 
 csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
 pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
@@ -710,7 +710,7 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
             print('100 frames faites', count)
             compteur = 0
         compteur +=1
-        count+=1
+        count+=10000
 A = pd.read_csv('data.csv',sep=';',header = None)
 B = pd.read_csv('data_est.csv',sep=';',header = None)
     

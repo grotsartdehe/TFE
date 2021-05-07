@@ -46,7 +46,7 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     Zreal = np.abs(Z)
     
     m = Zreal[int(row//2):l0,int(col//2):l3]
-    
+    """
     plt.figure()
     mmax = np.max(m)
     plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m/mmax)
@@ -55,7 +55,7 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     plt.title("Heatmap Angles sans ambiguités")
     plt.colorbar()
     plt.show()
-    
+    """
     #plt.contourf(X,Y,Z)
     x = np.max(m)
     
@@ -86,7 +86,6 @@ def plotDV(Z):
     res_d = 0.274
     res_v = 0.63/3.6
     
-    
     N=256
     X = np.linspace(-vmax, vmax, N)
     Y = np.linspace(0, dmax, N)
@@ -110,7 +109,6 @@ def plotAngles(Z):
     plt.ylabel('cos(theta)')
     plt.title('Heatmap (theta,phi)')
     plt.show()
-    
     
     
 def Searchdv(Z,row,col):
