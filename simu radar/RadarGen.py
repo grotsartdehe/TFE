@@ -282,19 +282,19 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
     
         
-    kernel = np.zeros((11,11))
+    kernel = np.zeros((5,5))
     chassis = np.abs(long*np.cos(xsi) + largeur*np.sin(xsi))
    
     dpoints=int(chassis/res_d)
     
-    if dpoints >=5 :
-        dpoints=4
+    if dpoints >=3 :
+        dpoints=2
     
-    m = np.arange(-5,6)
+    m = np.arange(-2,3)
     m = - np.abs(m)
-    kernel[5-dpoints:5+dpoints,:]=0.5
-    kernel[5-dpoints,:]=0.1*np.exp(m)
-    kernel[5+dpoints,:]=0.1*np.exp(m)
+    kernel[2-dpoints:2+dpoints,:]=0.1
+    kernel[2-dpoints,:]=0.1*np.exp(m)
+    kernel[2+dpoints,:]=0.1*np.exp(m)
     Znew =ss.convolve2d(Z,kernel,mode = 'same')
     
     
