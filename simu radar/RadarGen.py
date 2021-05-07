@@ -356,7 +356,7 @@ Inputs: classcar: classe du véhicule [string]
     if len(d)==0:
         
         Xdv,Ydv,Zdv,Za = radar(0,0,0,0,0,0,0,0)
-        print("entrer dans la boucle d.index ==0")
+        #print("entrer dans la boucle d.index ==0")
     else:
         for i in range(len(d)):
             

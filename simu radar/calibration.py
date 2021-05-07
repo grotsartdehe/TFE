@@ -9,7 +9,8 @@ import numpy as np
 import os.path 
 import csv
 from main import CreateandSearch
-from correction import correction
+from correction import correction, correctionAngle
+from numba import cuda
 
 #Supprime les datas de la caméra qui sont cachées
 #Renvoie un nouvel array avec uniquement les datas utiles
@@ -108,17 +109,27 @@ def radarCamera(data_radar, data_cam, dim, name, cm, data):
         v_i = data_radar[i,3]
         X_radar[i],Y_radar[i],Z_radar[i] = coordonnee_sph(d_i,theta_i,phi_i)
         d_radar[i] = d_i
+    data_cam2 = data_cam.copy()
+    for i in range(len(data_cam2)):
+        theta_i = data_cam2[i,2]
+        phi_i = data_cam2[i,4]
+        n1 = theta_i//17
+        n2 = phi_i//32
+        data_cam2[i,2] = theta_i-n1*17
+        data_cam2[i,4] = phi_i-n2*32
     if len(data_radar) > len(data_cam):#il faut supprimer des datas radars
         data_r_new = np.zeros((len(data_cam),4))
         d_radar_copy = d_radar.copy()
         x_radar_copy = X_radar.copy()
         y_radar_copy = Y_radar.copy()
         z_radar_copy = Z_radar.copy()
+        data_radar_copy = data_radar.copy()
         for i in range(len(data_cam)):
             #L1 = np.sqrt(((X_true[i]-x_radar_copy.tolist())**2+(Y_true[i]-y_radar_copy.tolist())**2)+(Z_true[i]-z_radar_copy.tolist())**2).tolist()
             d_true_i = d_true[i]
             #L1 = np.sqrt(((d_true_i-d_radar.tolist())**2)).tolist()
             L1 = np.sqrt(((d_true_i-d_radar_copy.tolist())**2)).tolist()
+            #L1 = np.sqrt((data_cam[i,2]-data))
             index_i1 = L1.index(min(L1))
             #data_r_new[i,:] = data_radar[index_i1,:]
             ind = np.where((data_radar[:,0] == d_radar_copy[index_i1]))
@@ -186,15 +197,15 @@ def radarCamera(data_radar, data_cam, dim, name, cm, data):
             Z_true_copy = Z_true_copy.tolist()
             Z_true_copy.remove(Z_true_copy[index_i1])
             Z_true_copy = np.array(Z_true_copy)
-            
         return data_t_new, data_radar,dim_new,name_new,cm_new,data_new
     else:
         data_r_new = np.zeros((len(data_cam),4))
         data_radar_copy = data_radar.copy()
         for i in range(len(data_cam)):
-            #L1 = np.sqrt(((data_t[i,0]-data_radar[:,0].tolist())**2)).tolist()
             L1 = np.sqrt(((data_cam[i,0]-data_radar_copy[:,0].tolist())**2)).tolist()
+            #L1 = np.sqrt(((data_cam[i,0]-data_radar_copy[:,0].tolist())**2)).tolist()
             #L1 = np.sqrt(((data_cam[i,0]-data_radar_copy[:,0].tolist())**2+(data_cam[i,2]-data_radar_copy[:,1].tolist())**2+(data_cam[i,4]-data_radar_copy[:,2].tolist())**2)).tolist()
+            #L1 = np.sqrt((data_cam2[i,2]-data_radar_copy[:,1])**2+(data_cam2[i,4]-data_radar_copy[:,2])**2 + data_cam2[i,0]-data_radar_copy[:,0]).tolist()
             index_i1 = L1.index(min(L1))
             ind = np.where((data_radar[:,0] == data_radar_copy[index_i1,0]))
             #data_r_new[i,:] = data_radar[index_i1,:]
@@ -214,10 +225,21 @@ def coordonnee_sph(r,theta,phi):
     z = r*np.cos(theta)
     return x,y,z
 
+def change_name(nom):
+    t = np.char.split(nom,sep='_').tolist()
+    t = t[0:-1]#supprime le numero de l instance du vehicule
+    new_name = t[0]+'_'
+    for j in range(len(t)-1):
+        if j+1 == len(t)-1:
+            new_name += t[j+1]
+        else:
+            new_name += t[j+1]+'_'
+    return new_name
+
 #Détermine si la voiture est vue de dos ou de côté
 #Retourne la largeur en metre correspondante
-def dimension(cm1,cm2,data,data_YOLO):
-    vehicule_dim = pd.read_csv('vehicule_dimension.csv',sep=';').values
+def dimension(cm1,cm2,data,data_YOLO,name_data):
+    vehicule_dim = pd.read_csv('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/vhDim.csv',sep=';').values
     longueur = vehicule_dim[:,1]
     largeur = vehicule_dim[:,2]
     hauteur = vehicule_dim[:,3]
@@ -228,19 +250,20 @@ def dimension(cm1,cm2,data,data_YOLO):
         value = cm2[i]
         L1 = np.sqrt(((value[0]-data[:,6].tolist())**2+(value[1]-data[:,7].tolist())**2)).tolist()
         index_i1 = L1.index(min(L1))
-        name_i = data[index_i1,1]
+        nom_i = data[index_i1,1]
         L2 = np.sqrt((value[0]-cm1[:,0])**2+(value[1]-cm1[:,1])**2).tolist()
         index_i2 = L2.index(min(L2))
         delta_x = np.abs(cm1[index_i2,0]-cm2[i,0])
         delta_y = np.abs(cm1[index_i2,1]-cm2[i,1])
-        t = np.char.split(name_i,sep='_').tolist()
-        t = t[0:-1]#supprime le numero de l instance du vehicule
-        name_i = t[0]+'_'
-        for j in range(len(t)-1):
-            if j+1 == len(t)-1:
-                name_i += t[j+1]
-            else:
-                name_i += t[j+1]+'_'
+        index_name = nom_i.find('|')
+        if index_name != -1:
+            nom1 = nom_i[0:index_name-1]
+            nom2 = nom_i[index_name+1::]
+            nom1 = change_name(nom1)
+            nom2 = change_name(nom2)
+            name_i = nom1 + '+' + nom2 +'_C'
+        else:
+            name_i = change_name(nom_i)
         name = np.append(name,name_i)
         ind = np.where(vehicule_dim[:,0] == name_i)
         #IL FAUT PRENDRE EN COMPTE LES NOUVELLES DIMENSIONS !!
@@ -295,7 +318,7 @@ def dimension(cm1,cm2,data,data_YOLO):
                 else:
                     dimension[i] = largeur[ind]/100
                     dimension2[i] = hauteur[ind]/100
-    return dimension2,name
+    return dimension,name
 
 #Estimation de la position d'un véhicule dans le repère de la caméra
 #Retourne les coordonnées sphériques et cartésiennes
@@ -347,12 +370,12 @@ def calibration(L,cm,dimension,data,W,H):
         #print(distance[i])
         #distance[i] = np.sqrt(distance[i]**2 + 5.57**2)
         distance[i] = (dimension[i]/(2))/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
-        dd = distanceModif(cm[i],dimension[i],round(L[i]),W,H)
-        #distance[i] = dd
+        dd = distanceModif(cm[i],dimension[i],round(L[i]),W,1080)
+        distance[i] = dd
         distance[i] = np.sqrt(5.57**2+distance[i]**2)
         #print('old distance', distance[i])
         #print('new distance',np.mean(dd))
-        #distance[i] = dd
+        distance[i] = dd
         #distance_real[i] = np.sqrt((data[index_i1,3]-Xc)**2+(data[index_i1,4]-Yc)**2+(data[index_i1,5]-Zc)**2)/100
         distance_real[i] = np.sqrt((data_copy[index_i1,3]-Xc)**2+(data_copy[index_i1,4]-Yc)**2+(data_copy[index_i1,5]-Zc)**2)/100
         #print('real distance', distance_real[i])
@@ -392,12 +415,13 @@ def distanceModif(cm,dim,L,W,H):
     #theta2 = (cm-W/2)*beta/W
     #xi = cc[0] +L/2 
     #theta2 = xi*beta/W
-    distance = np.zeros(L//2)#(dim)/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
+    val = int(L//2)
+    distance = np.zeros(val)#(dim)/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
     
-    for i in range((L//2)):
+    for i in range((val)):
         xi = cm_norm - L/2 + (2*i+1)
         theta2 = xi*beta/H#xi*beta/W
-        N = (i+1)/(L//2)
+        N = (i+1)/(val)
         distance[i] = (dim*N)/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
     std = np.std(distance)
     #print(distance)
@@ -414,7 +438,7 @@ def distanceModif(cm,dim,L,W,H):
 #Ici, c'est la frame t et t-2
 def vitesse(data_t,data_old,cm1,cm2,largeur,hauteur):
     vitesse = np.zeros((len(data_t),2))
-    dt = 10/30
+    dt = 1/30
     #print('cm1',cm1)
     #print('cm2',cm2)
     for i in range(len(cm2)):
@@ -479,8 +503,8 @@ def isTheSame(data):
                     index = np.append(index,np.append(i,j)).tolist()
                     #print(index)
     return np.array(data_new)
-def checkDistance(data,d_radar,d_cam,dim,name,cm,L,W,H):
-    vehicule_dim = pd.read_csv('vehicule_dimension.csv',sep=';').values
+def checkDistance(data,d_radar,d_cam,dim,name,cm,L,W,H,name_data):
+    vehicule_dim = pd.read_csv('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/vhDim.csv',sep=';').values
     longueur = vehicule_dim[:,1]
     largeur = vehicule_dim[:,2]
     beta = 28
@@ -493,7 +517,6 @@ def checkDistance(data,d_radar,d_cam,dim,name,cm,L,W,H):
         #if diff_i > 20:
         ind = np.where(vehicule_dim[:,0] == name[i])
         longueur_i = longueur[ind]/100
-        #print('ind',ind)
         largeur_i = largeur[ind]/100
         """
         if len(ind[0])==0:
@@ -548,10 +571,11 @@ def lissage(data1,data2,d):
         print(a + b*aire_t[i])
     return distance_new
 
+
 #Fonction principale qui lance toutes les sous fonctions
-cam_number = 1
-name_data = 'data_jour'
-count = 1595#test de la frame 2437
+cam_number = 0
+name_data = 'data_final'
+count = 400#test de la frame 2437
 
 csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
 pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
@@ -565,7 +589,7 @@ Zc = position_camera['Zpos'][0]#-53546.0
 pitch = position_camera['Pitch'][0]#-12.999
 yaw = position_camera['Yaw'][0]#-2.5
 W = 1920
-H = 1080#1080
+H = 1280#1080
 compteur = 0
 ordre = []
 with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newline='') as myWriter2:
@@ -574,15 +598,16 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
     while(os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count).zfill(8)+'.csv') == 1):
         data_ant = pd.read_csv('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.csv', sep=';').values
         data = pd.read_csv('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count).zfill(8)+'.csv', sep=';').values
-        data0 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count-2).zfill(8)+'.txt',sep=' ',header = None).values
-        data1 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.txt',sep=' ',header = None).values
-        data2 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count).zfill(8)+'.txt',sep=' ',header = None).values
-        #data_ant = dataCamera(data_ant)
-        #data = dataCamera(data)
-        data_ant = dataCamera2(data_ant,W,H)
-        data_test = data
-        data = dataCamera2(data,W,H)
-        if(data.shape != (0,60) and data_ant.shape != (0,60)):
+        cond = os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count).zfill(8)+'.txt') == 1 and os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.txt') == 1 and os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count-2).zfill(8)+'.txt') == 1
+        if(cond):
+            data0 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count-2).zfill(8)+'.txt',sep=' ',header = None).values
+            data1 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.txt',sep=' ',header = None).values
+            data2 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'_cam0'+str(cam_number)+'/labels/0'+str(cam_number)+'_'+str(count).zfill(8)+'.txt',sep=' ',header = None).values
+            #data_ant = dataCamera(data_ant)
+            #data = dataCamera(data)
+            data_ant = dataCamera2(data_ant,W,H)
+            data_test = data
+            data = dataCamera2(data,W,H)
             #denormalisation des datas de yolo
             data0[:,1] = data0[:,1]*W#coord x du centre de masse
             data0[:,2] = data0[:,2]*H#coord y du centre de masse
@@ -606,81 +631,86 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
             data0 = isTheSame(data0)
             data1 = isTheSame(data1)
             data2 = isTheSame(data2)
+            if(data.shape != (0,60) and data_ant.shape != (0,60) and data0.shape != (0,) and data1.shape != (0,) and data2.shape != (0,)):
+                cm0 = np.int32(np.array([data0[:,1].tolist(),data0[:,2].tolist()]).T)
+                cm1 = np.int32(np.array([data1[:,1].tolist(),data1[:,2].tolist()]).T)
+                cm2 = np.int32(np.array([data2[:,1].tolist(),data2[:,2].tolist()]).T)
         
-            cm0 = np.int32(np.array([data0[:,1].tolist(),data0[:,2].tolist()]).T)
-            cm1 = np.int32(np.array([data1[:,1].tolist(),data1[:,2].tolist()]).T)
-            cm2 = np.int32(np.array([data2[:,1].tolist(),data2[:,2].tolist()]).T)
-    
-            #print('pixel_reel_YOLO')
-            
-            cm1,data_ant,data1 = association(cm1,data_ant,data1)
-            cm2,data,data2 = association(cm2,data,data2)
-            #area = aire(data1,data2)
-            
-            #print(area)
-            dim1,name1 = dimension(cm0,cm1,data_ant,data1)
-            dim2,name2 = dimension(cm1,cm2,data,data2)
-            name_test = name2
-            #print(cm2)
-            data_old = calibration(data1[:,4],cm1,dim1,data_ant,W,H)
-            data_t = calibration(data2[:,4],cm2,dim2,data,W,H)
-            csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
-            pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
-            df = pd.read_csv(pos_cam, sep =';')
-            pos_cam = df.values[1,:]#[df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
-            data_r = CreateandSearch('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count).zfill(8)+'.csv', pos_cam)
-            data_r_old = CreateandSearch('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.csv', pos_cam)
-            if(len(data_r)!=0 and len(data_r_old) != 0):
-                data_r_test = data_r
-                for i in range(len(data_r)):
-                    data_r[i,0] = data_r[i,0] + np.random.rand()
-                for i in range(len(data_r_old)):
-                    data_r_old[i,0] = data_r_old[i,0] + np.random.rand()
-                data_old, data_r_old,dim1,name1,cm1,data1 = radarCamera(data_r_old,data_old,dim1,name1,cm1,data1)
-                data_t, data_r,dim2,name2,cm2,data2 = radarCamera(data_r,data_t,dim2,name2,cm2,data2)
-                data_old = checkDistance(data_old,data_r_old[:,0], data_old[:,0], dim1, name1, cm1, data1[:,3], W, H)
-                data_t = checkDistance(data_t,data_r[:,0], data_t[:,0], dim2, name2, cm2, data2[:,3], W, H)
-                #distance_test = lissage(data1,data2,data_t[:,0])
+                #print('pixel_reel_YOLO')
                 
-                v = vitesse(data_t,data_old,cm1,cm2,data2[:,3],data2[:,4])
-                #ecriture du fichier csv 
-                data_r_test = data_r
-                for i in range(len(data_t)):
-                    d_i1 = data_t[i,0]
-                    theta_i1 = data_t[i,2]
-                    phi_i1 = data_t[i,4]
-                    v_i1 = v[i,0]
+                cm1,data_ant,data1 = association(cm1,data_ant,data1)
+                cm2,data,data2 = association(cm2,data,data2)
+                #area = aire(data1,data2)
+                
+                #print(area)
+                dim1,name1 = dimension(cm0,cm1,data_ant,data1,name_data)
+                dim2,name2 = dimension(cm1,cm2,data,data2,name_data)
+                name_test = name2
+                #print(cm2)
+                data_old = calibration(data1[:,4],cm1,dim1,data_ant,W,H)
+                data_t = calibration(data2[:,4],cm2,dim2,data,W,H)
+                csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
+                pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
+                df = pd.read_csv(pos_cam, sep =';')
+                pos_cam = df.values[1,:]#[df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
+                data_r = CreateandSearch('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count).zfill(8)+'.csv', pos_cam,cam_number)
+                data_r_old = CreateandSearch('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.csv', pos_cam,cam_number)
+                if(len(data_r)!=0 and len(data_r_old) != 0):
+                    data_r_test = data_r
+                    for i in range(len(data_r)):
+                        data_r[i,0] = data_r[i,0] + np.random.rand()
+                    for i in range(len(data_r_old)):
+                        data_r_old[i,0] = data_r_old[i,0] + np.random.rand()
+                    data_old, data_r_old,dim1,name1,cm1,data1 = radarCamera(data_r_old,data_old,dim1,name1,cm1,data1)
+                    data_t, data_r,dim2,name2,cm2,data2 = radarCamera(data_r,data_t,dim2,name2,cm2,data2)
+                    data_old = checkDistance(data_old,data_r_old[:,0], data_old[:,0], dim1, name1, cm1, data1[:,3], W, H,name_data)
+                    data_t = checkDistance(data_t,data_r[:,0], data_t[:,0], dim2, name2, cm2, data2[:,3], W, H,name_data)
+                    #distance_test = lissage(data1,data2,data_t[:,0])
                     
-                    d_ri1 = data_r[i,0]
-                    theta_ri1 = data_r[i,1]#*180/np.pi
-                    phi_ri1 = data_r[i,2]#*180/np.pi
-                    v_ri1 = data_r[i,3]
-                    
-                    L1 = np.sqrt(((d_i1-data_old[:,0].tolist())**2+(theta_i1-data_old[:,2].tolist())**2+(phi_i1-data_old[:,4])**2)).tolist()
-                    index_i1 = L1.index(min(L1))
-                    L2 = np.sqrt(((d_ri1-data_r_old[:,0].tolist())**2)).tolist()
-                    index_i2 = L2.index(min(L2))
-                    
-                    #vect_i = np.array([d_i1,theta_i1,phi_i1,v_i1,d_ri1,theta_ri1,phi_ri1,v_ri1])
-                    vect1 = np.array([d_i1,theta_i1,phi_i1,d_ri1,theta_ri1,phi_ri1,v_ri1])
-                    vect2 = np.array([data_old[index_i1,0],data_old[index_i1,2],data_old[index_i1,4],data_r_old[index_i2,0],data_r_old[index_i2,1],data_r_old[index_i2,2],data_r_old[index_i2,3]])
-                    data_corr = correction(vect2,vect1)
-                    #print(data_corr)
-                    d_i2 = data_t[i,1]
-                    theta_i2 = data_t[i,3]
-                    phi_i2 = data_t[i,5]
-                    v_i2 = v[i,1]
-                    #writer.writerow((count,d_i1,theta_i1,phi_i1,v_i1))#Pour connaitre la frame
-                    #writer2.writerow((count,d_i2,theta_i2,phi_i2,v_i2))
-                    #writer.writerow((d_i1,theta_i1,phi_i1,v_i1,d_ri1,theta_ri1,phi_ri1,v_ri1))
-                    writer.writerow((count,data_corr[0],data_corr[1],data_corr[2],v_i1,data_corr[3],data_corr[4],data_corr[5],data_corr[6]))
-                    writer2.writerow((count,d_i2,theta_i2,phi_i2,v_i2))
-                    ordre = np.append(ordre,count)
+                    v = vitesse(data_t,data_old,cm1,cm2,data2[:,3],data2[:,4])
+                    #ecriture du fichier csv 
+                    data_r_test = data_r
+                    for i in range(len(data_t)):
+                        d_i1 = data_t[i,0]
+                        theta_i1 = data_t[i,2]
+                        phi_i1 = data_t[i,4]
+                        v_i1 = v[i,0]
+                        
+                        d_ri1 = data_r[i,0]
+                        theta_ri1 = data_r[i,1]#*180/np.pi
+                        phi_ri1 = data_r[i,2]#*180/np.pi
+                        v_ri1 = data_r[i,3]
+                        
+                        L1 = np.sqrt(((d_i1-data_old[:,0].tolist())**2+(theta_i1-data_old[:,2].tolist())**2+(phi_i1-data_old[:,4])**2)).tolist()
+                        index_i1 = L1.index(min(L1))
+                        L2 = np.sqrt(((d_ri1-data_r_old[:,0].tolist())**2)).tolist()
+                        index_i2 = L2.index(min(L2))
+                        
+                        #vect_i = np.array([d_i1,theta_i1,phi_i1,v_i1,d_ri1,theta_ri1,phi_ri1,v_ri1])
+                        vect1 = np.array([d_i1,theta_i1,phi_i1,d_ri1,theta_ri1,phi_ri1,v_ri1])
+                        vect2 = np.array([data_old[index_i1,0],data_old[index_i1,2],data_old[index_i1,4],data_r_old[index_i2,0],data_r_old[index_i2,1],data_r_old[index_i2,2],data_r_old[index_i2,3]])
+                        data_corr = correction(vect2,vect1)
+                        #print(data_corr)
+                        x_pred_cam,y_pred_cam,z_pred_cam = coordonnee_sph(data_corr[0], data_corr[1], data_corr[2])
+                        x_pred_rad,y_pred_rad,z_pred_rad = coordonnee_sph(data_corr[3], data_corr[4], data_corr[5])
+                        x_true,y_true,z_true = coordonnee_sph(data_t[i,1], data_t[i,3], data_t[i,5])
+                        d_i2 = data_t[i,1]
+                        theta_i2 = data_t[i,3]
+                        phi_i2 = data_t[i,5]
+                        v_i2 = v[i,1]
+                        #writer.writerow((count,d_i1,theta_i1,phi_i1,v_i1))#Pour connaitre la frame
+                        #writer2.writerow((count,d_i2,theta_i2,phi_i2,v_i2))
+                        #writer.writerow((d_i1,theta_i1,phi_i1,v_i1,d_ri1,theta_ri1,phi_ri1,v_ri1))
+                        #writer.writerow((count,data_corr[0],data_corr[1],data_corr[2],v_i1,data_corr[3],data_corr[4],data_corr[5],data_corr[6]))
+                        #writer2.writerow((count,d_i2,theta_i2,phi_i2,v_i2))
+                        writer.writerow((count,x_pred_cam,y_pred_cam,z_pred_cam,v_i1,x_pred_rad,y_pred_rad,z_pred_rad,data_corr[6]))
+                        writer2.writerow((count,x_true,y_true,z_true,v_i2))
+                        ordre = np.append(ordre,count)
         if compteur == 100:
             print('100 frames faites', count)
             compteur = 0
         compteur +=1
-        count+=10000
+        count+=1
 A = pd.read_csv('data.csv',sep=';',header = None)
 B = pd.read_csv('data_est.csv',sep=';',header = None)
     

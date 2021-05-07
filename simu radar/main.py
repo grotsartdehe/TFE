@@ -87,8 +87,8 @@ def extract(df,pos_cam):
     
     xsi = np.arctan2(Ydir,Xdir)
     #print(xsi*180/np.pi)
-    store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
-    
+    #store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
+    #print(store)
     
    
     
@@ -96,7 +96,7 @@ def extract(df,pos_cam):
     
     
     
-def CreateandSearch(FX_csv,pos_cam,cam_number = 0):
+def CreateandSearch(FX_csv,pos_cam,cam_number):
     """
     
 
@@ -144,18 +144,18 @@ def CreateandSearch(FX_csv,pos_cam,cam_number = 0):
     for m in index:
         if m ==-1:
             Z= np.random.normal((256,256))
-            print('random')
+            #print('random')
             theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number )
         else:
             
             Z = ambiguite(theta[m],phi[m],cam_number=cam_number)
             #plotAngles(Z)
             theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number=cam_number )
-            print('true angles',theta[m]*180/pi,phi[m]*180/pi)
-            print('false angles',theta_esti[count]*180/pi,phi_esti[count]*180/pi)
+            #print('true angles',theta[m]*180/pi,phi[m]*180/pi)
+            #print('false angles',theta_esti[count]*180/pi,phi_esti[count]*180/pi)
             vect2 = [0,theta[m]*180/pi,phi[m]*180/pi,0,theta_esti[count]*180/pi,phi_esti[count]*180/pi,0]
             vect2 = correctionAngle(vect2)
-            print(vect2)
+            #print(vect2)
         count +=1
     # print('real phi',phi*180/pi)
     # print('estim phi',phi_esti*180/pi)
