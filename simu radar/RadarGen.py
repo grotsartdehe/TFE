@@ -34,9 +34,9 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     dz = d*np.cos(theta)
     
     N = 200
-    L1 = a - b/4#longueur de la partie rectiligne horizontale
+    L1 = a - b/2#longueur de la partie rectiligne horizontale
     L2 = b-1#ongueur de la partie rectiligne verticales
-    pente = 0.5/(b/8)#inclinaison des courbures du véhicule
+    pente = 0.5/(b/4)#inclinaison des courbures du véhicule
     
     vect = np.ones(N)
 
@@ -88,27 +88,30 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     Y[6*N:7*N] = yy7
     X[7*N:8*N] = xx8
     Y[7*N:8*N] = yy8
-    
-    R = [[np.cos(xsi),-np.sin(xsi)],[np.sin(xsi),np.cos(xsi)]]
-    
-    for i in range(len(X)):
+    X += np.random.normal(scale=0.02,size = 8*N)
+    Y += np.random.normal(scale=0.02,size = 8*N)
+    R = np.array([[np.cos(xsi),-np.sin(xsi)],[np.sin(xsi),np.cos(xsi)]])
+    #print(R.shape)
+    """for i in range(len(X)):
         
-         [X[i],Y[i]] = R @ np.array([[X[i],Y[i]]]).T
+         [X[i],Y[i]] = R.T @ np.array([[X[i],Y[i]]])"""
+    X
     X = X + dx
     Y = Y + dy
-    #plt.figure()
     
-    """plt.scatter(X,Y, marker = '.', c = 'black')
-    plt.scatter(0,0,c = 'red')"""
-    
+    plt.figure()
+    plt.scatter(Y,X, marker = '.', c = 'black')
+    plt.scatter(0,0,c = 'red')
+    plt.xlabel('Axe x [m]')
+    plt.ylabel('Axe y [m]')
+    plt.title('Position du châssis dans l\'espace')
     distance = np.zeros(8*N)
     for i in range(len(distance)):
         distance[i] = np.sqrt((X[i]**2) + Y[i]**2)
     indice = np.argmin(distance)
     x = X[indice]
     y = Y[indice]
-
-    # plt.scatter(x,y,c = 'yellow')
+    plt.scatter(y,x,c = 'yellow')
     slope = np.zeros(N*8)
     for j in range(0,8):
         slope[j*N:(j+1)*(N)-2] = -1/(( Y[j*N+1:(j+1)*N-1] - Y[j*N:(j+1)*N-2]) /(X[j*N+1:(j+1)*N-1]-X[j*N:(j+1)*N-2]))
@@ -117,7 +120,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     indic = np.argmin(np.abs(eval0))
     xmin = X[indic]
     ymin = Y[indic]
-    #plt.scatter(xmin,ymin,c = 'green')
+    plt.scatter(ymin,xmin,c = 'green')
 
 
     return x,y,slope
