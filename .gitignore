@@ -8,3 +8,5 @@ simu radar/bigfile4200
 simu radar/bigfile750
 *.jpg
 *.csv
+*.raw
+*.pickle
