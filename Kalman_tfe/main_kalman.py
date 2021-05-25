@@ -14,12 +14,12 @@ import time
 import datetime
 import pickle
 from meta_para import *
-params = kalman_params()
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from correction import correctionAngle
 
-def kalman(data_esti, data):
+def kalman(data_esti, data5):
     """
     
 
@@ -37,43 +37,60 @@ def kalman(data_esti, data):
     None.
 
     """
-    dt, gate, lamb, max_invisible = params.get_params()
-    truth_gr = load_data(data)
-    data = load_data(data_esti)
     
+    dt, gate, lamb, max_invisible = params.get_params()
+    
+    truth_gr = pd.read_csv(data5,sep=';',header = None).values
+    data = load_data(data_esti)
+    data[:,1:5] = transform(data[:,1:5])
+    data[:,5::] = transform(data[:,5::])
+    truth_gr[:,1::] = transform(truth_gr[:,1::])
     tracks = []
-    plt.figure()
+    #plt.figure()
+    # plt.title('Kalman trajectoire vs ground truth')
+    # plt.xlabel('axe x [m]')
+    # plt.ylabel('axe y [m]')
     k1=0
     i = 0
-    MSE = np.zeros(int(data[-1,0] - data[0,0]))
-    #for index in (range(int(data[0,0]),int(data[-1,0]))):
-    for index in (range(int(1078),int(1100))):
-        print(index)
+    MSE = np.zeros(int(len(data) ))
+    
+    for index in (range(int(data[0,0]),int(data[-1,0]))):
+    #for index in (range(int(1500),int(1950))):
+        if index //50 ==0:
+            print(index)
         tracks = kalman_estimate(tracks, data[data[:,0]==index])
         #if len(tracks) > 0:
         
         count = 0
         for k in tracks:
-            print(k.X)
+            #print(k.X)
             x,y,z = getcarte(k.X)
-            plt.scatter(x,y,c = 'blue')
-            
+            #plt.scatter(x,y,c = 'blue')
             
         for m in range(len(truth_gr[truth_gr[:,0]==index])):
             inter = truth_gr[truth_gr[:,0]==index]
-            print('truth',inter[m,1::])
+            #print('truth',inter[m,1::])
             x1,y1,z1 =getcarte(inter[m,1::])
-            plt.scatter(x1,y1,c = 'red')
+            #plt.scatter(x1,y1,c = 'red')
+            #plt.legend(['Kalman Filter','ground truth'])
+            
         inter = truth_gr[truth_gr[:,0]==index]
         L2,index = assos(tracks,inter[:,1::])
         p =L2.argsort()
-        print(L2)
+        #print(L2)
+        
         MSE[i] = np.mean(L2[L2<200])
         i += 1
-    plt.figure()
-    plt.scatter(range(len(MSE[MSE>0])),MSE[MSE>0])
-    print("MSE",np.mean(MSE[MSE>0]))
     
+    # plt.figure()
+    # plt.scatter(range(len(MSE[MSE>0])),MSE[MSE>0])
+    # plt.title('MSE per iteration')
+    # plt.xlabel('iteration i')
+    # plt.ylabel('MSE')
+    
+    print("MSE",np.mean(MSE[MSE>0]))
+    #Lister.append(np.mean(MSE[MSE>0]))
+    return(np.mean(MSE[MSE>0]))
     
     
 def assos(tracks,truth):
@@ -85,6 +102,7 @@ def assos(tracks,truth):
         for j in range(truth.shape[0]):
             x0,y0,z0 = getcarte(truth[j,1::])
             dist = np.sqrt((x-x0)**2 +(y-y0)**2+(z-z0)**2)
+            #dist += np.sqrt((i.X[j,-1] -truth[j,-1] )**2)
             
             if dist < mindist[j]:
                 mindist[j]= dist
@@ -93,9 +111,19 @@ def assos(tracks,truth):
                 index[j] = j
     
     return mindist,index
+
+
+
+def transform(df):
+    X = df[:,0]
+    Y = df[:,1]
+    Z = df[:,2]
+    d = np.sqrt(X**2 + Y**2 + Z**2)
+    theta = np.arccos(Z/d) 
+    phi = np.arctan2(Y,X)
+    return np.array([d,theta,phi,df[:,3]]).T
 def load_data(data):
     data = pd.read_csv(data,sep=';',header = None).values
-
     return data
 def kalman_estimate(tracks,detections):
     #print('debut estimate',tracks)
@@ -103,7 +131,7 @@ def kalman_estimate(tracks,detections):
         return housekeep(tracks,detections)
     tracks = predict(tracks)
     if(len(detections) == 0):
-        print('ici?')
+        #print('ici?')
         for tr in tracks:
             tr.invisible += 1
         return housekeep(tracks, detections)
@@ -142,14 +170,15 @@ def housekeep(tracks, detections, new = 0):
                 F,H,Q,Rinv,R_cam,R_rad = params.get_matrices()
             except:
                 F,H,Q,Rinv,R_cam,R_rad = params.get_matrices() #pas compris a quoi ca servait...
+            
             a = np.zeros(6)
             a[0:4] = detections[det,1:5]
             b = np.zeros(6)
             b[0:4]= detections[det,5:9]
             
-            X= R_rad @ Rinv @ a + R_cam @ Rinv @ b
-            
-            R = R_cam @ Rinv @ R_rad
+            #X= R_rad @ Rinv @ a + R_cam @ Rinv @ b
+            X = Rinv @ (R_rad @ b + R_cam @ a)
+            R = Rinv
             
             # print(a)
             # print(b)
@@ -182,12 +211,15 @@ def housekeep(tracks, detections, new = 0):
                 a[0:4] = detections[det,1:5]
                 b = np.zeros(6)
                 b[0:4]= detections[det,5:9]
-                R = R_cam @ Rinv @ R_rad
-                X= R_rad @ Rinv @ a + R_cam @ Rinv @ b
+                # R = R_cam @ Rinv @ R_rad
+                # X= R_rad @ Rinv @ a + R_cam @ Rinv @ b
+                X = Rinv @ (R_rad @ b + R_cam @ a)
+                
+                R = Rinv
                 new_t.create(X, R)
                 new_tracks.append(new_t)
-                print(a)
-                print(b)
+                #print(a)
+                #print(b)
         # Keep only good tracks
         
         tracks.extend(new_tracks)
@@ -199,11 +231,13 @@ def housekeep(tracks, detections, new = 0):
         obs = False
 
         for t in tracks:
-            thresh = 0.8#*math.degrees(math.atan(objects_obs_size[t.classe]/(2*t.X[2])))
+            
+            thresh = 0#*math.degrees(math.atan(objects_obs_size[t.classe]/(2*t.X[2])))
             if(abs(tr.X[0] - t.X[0]) < thresh and (tr.X[2] > t.X[2]) and tr.min_det > min_det_obstruction):
                 if(t.min_det > min_obs_front):
                     tr.obstruction += 1
                     obs = True
+                    print('obs')
 
         if(obs == False):
             tr.obstruction = 0
@@ -274,9 +308,12 @@ def associate(tracks, detections):
             a[0:4] = detections[det,1:5]
             b = np.zeros(6)
             b[0:4]= detections[det,5:9]
-            op = R_rad @ Rinv @ a + R_cam @ Rinv @ b
+            op = Rinv @ (R_rad @ b + R_cam @ a)
+            R = Rinv
+            
             v = op - np.dot(H, tr.X)    # v = z - H x
             d = np.dot(v.T,np.linalg.inv(tr.S))    # d = v^T S^-1 v
+            
             d = np.dot(d,v)
             
             d = max(0.0,d)
@@ -351,7 +388,7 @@ def update(tracks, detections, associated, new):
         sum_i = sum_p[e[0]]
         #classes[e[0]] = get_max_class(classes[e[0]], detections[e[1]])
         if(sum_i != 0.0):
-            p_d = 0.9 #detections[e[1]].get_confidence()
+            p_d = 0.95 #detections[e[1]].get_confidence()
             """
             indice de confiance pour detection de véhicule camera
             """
@@ -373,7 +410,9 @@ def update(tracks, detections, associated, new):
         a0[0:4] = detections[p[1],1:5]
         b0 = np.zeros(6)
         b0[0:4]= detections[p[1],5:9]
-        op= R_rad @ Rinv @ a0 + R_cam @ Rinv @ b0
+        #op= R_rad @ Rinv @ a0 + R_cam @ Rinv @ b0
+        op = Rinv @ (R_rad @ b0 + R_cam @ a0)
+        
         b = (op - np.dot(H, tracks[p[0]].X))
         s_pv[p[0]] = np.add(s_pv[p[0]], p[2]*b)     # sum_{}^{} p_{i,j}v_{i,j}
 
@@ -383,7 +422,8 @@ def update(tracks, detections, associated, new):
         a0[0:4] = detections[p[1],1:5]
         b0 = np.zeros(6)
         b0[0:4]= detections[p[1],5:9]
-        op= R_rad @ Rinv @ a0 + R_cam @ Rinv @ b0
+        #op= R_rad @ Rinv @ a0 + R_cam @ Rinv @ b0
+        op = Rinv @ (R_rad @ b0 + R_cam @ a0)
         a = np.dot((op - np.dot(H, tracks[p[0]].X)), (op - np.dot(H, tracks[p[0]].X)).T)
         s_pvt[p[0]] = np.add(s_pvt[p[0]], p[2]*a)     # sum_{}^{} p_{i,j}v_{i,j}v_{i,j}^T
 
@@ -440,15 +480,34 @@ def drawing(res,ground_,figures):
     plt.scatter(x_true,y_true,c= 'red')
     plt.legend(['traj estimated','traj réele'])
 def getcarte(res):
-    x = res[0] * np.sin(res[1]*np.pi/180 )* np.cos(res[2]*np.pi/180)
-    y = res[(0)] * np.sin(res[1]*np.pi/180 )* np.sin(res[2]*np.pi/180)
-    z = res[0]*np.cos(res[1]*np.pi/180)
+    x = res[0] * np.sin(res[1] )* np.cos(res[2])
+    y = res[(0)] * np.sin(res[1] )* np.sin(res[2])
+    z = res[0]*np.cos(res[1])
     return x,y,z
-data_esti = 'data_est.csv'
-data = 'data.csv'
-kalman(data_esti,data)
-A = pd.read_csv(data,sep=';',header=None).values
-A0 = pd.read_csv(data_esti,sep=';',header=None).values
+
+
+
+data_esti = 'data_est_radial.csv'
+data = 'data_radial.csv'
+parameters = [1]
+Lister = []
+for o in parameters:
+        params = kalman_params()
+        
+        Lister.append(kalman(data_esti,data))
+plt.plot(parameters,Lister)
+plt.title('MSE par age maximale de la piste non associée')
+plt.xlabel('age maximale de la piste non  associée')
+plt.ylabel('MSE')
+# vrai = pd.read_csv(data,sep=';',header=None).values
+# esti = pd.read_csv(data_esti,sep=';',header=None).values
+# data_cam = transform(esti[:,1:5])
+# data_rad = transform(esti[:,5::])
+# truth = transform(vrai[:,1::])
+# x = data_cam[:,0] * np.sin(data_cam[:,1] )* np.cos(data_cam[:,2])
+# y = data_cam[:,0] * np.sin(data_cam[:,1] )* np.sin(data_cam[:,2])
+# z = data_cam[:,0]*np.cos(data_cam[:,1])
+# data_cam0 = np.array([x,y,z]).T
 # plt.figure()
 # for i in range(211,243):
     

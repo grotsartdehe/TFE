@@ -65,11 +65,13 @@ def extract(df,pos_cam):
     Xdir = df['XDir']
     Ydir = df['YDir']
     Zdir= df['ZDir']
+    
     #Dirnew =  R @  np.array([Xdir,Ydir,Zdir])
     Dirnew =  np.array([Xdir,Ydir,Zdir])
     Xdir = Dirnew[0]
     Ydir = Dirnew[1]
     Zdir= Dirnew[2]
+    
     
     #projection orthogonale
     norm =  np.sqrt(Xposdir**2 + Yposdir**2 + Zposdir**2) 
@@ -144,13 +146,7 @@ def CreateandSearch(FX_csv,pos_cam,cam_number):
     for m in index:
         if m ==-1:
             Z= np.random.normal((256,256))
-            """
-<<<<<<< HEAD
-            #print('random')
-=======
-             #print('random')
->>>>>>> 282388c393060580647d1d1d0cbc625d334e3966
-            """
+
             theta_esti[count],phi_esti[count] = Searchangle(Z,cam_number )
         else:
             
@@ -189,7 +185,7 @@ if __name__ == '__main__':
     for i in csv_data:
         if  not i.startswith('.~lock') and not i.startswith('pos') and not i.endswith('.jpg'):
         
-            n = 1078
+            n = 1150
             if  counter == n  or( counter > n and counter<(n)) :
                  
                 file = os.path.join(csv_folder,i)
@@ -202,6 +198,7 @@ if __name__ == '__main__':
                 v_abs = v_abs[v_real.index].values
                 
                 test = CreateandSearch(file,pos_cam,cam_number)
+                print(test)
                 if len(test)==0:
                     print('vecteur est vide')
                     continue

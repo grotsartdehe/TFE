@@ -15,7 +15,7 @@ class kalman_params:
         self.gate = min_dist_gate 
         self.lamb = lambda_fp
         self.max_invisible = max_invisible_no_obs #int(4*(1/self.dt))
-
+        
         self.F = np.array(
              [[1.0,0.0,0.0,self.dt,0.0,0.0],\
              [0.0,1.0,0.0,0.0,self.dt,0.0],\
@@ -86,7 +86,7 @@ class kalman_params:
         return self.P
 
     def get_params(self):
-
+        
         return (self.dt, self.gate, self.lamb, self.max_invisible)
 class track:
 

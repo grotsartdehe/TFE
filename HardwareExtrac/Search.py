@@ -7,7 +7,7 @@ Created on Wed Jan 27 10:54:36 2021
 """
 import numpy as np
 import pickle 
-from tools import *
+#from tools import *
 import matplotlib.pyplot as plt
 import math
 import os 
@@ -20,17 +20,36 @@ N_s=256;
 c = 3e8;
 w_0 = 2*np.pi*f_0;
 BW = 250e6;
+largeur = 3
+res_d = 0.274
+treshold = 50
 """
 X = np.array([[1,5,8,4],[4,8,3,9],[4,5,6,5]])
 print(X.argsort())"""
-def getzeroed(Z,row,col,classcar=0,res_d = 0.274):
-    large = int(np.floor(5.4/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
+def getzeroed(Z,row,col):
+    largeur = 5.4
+    large = int(np.floor(largeur/res_d)/2)
+    longeur = int(np.floor(largeur/res_d)/2)#longeur voiture ~ 4m + 1m pour marge
+    a = row-large
+    b = row+large
+    c = col -longeur
+    d = col +longeur
+    if row - large<0 :
+        a = 0
+    if row + large >255:
+        b = 255
+    if col - longeur<0 :
+        c = 0
+    if col + longeur >255:
+        d  = 255
     
-    Z[row-large:row+large,col-large:col+large]=0
+    
+        
+    Z[a:b,c:d]=0
     return Z
 
 
-def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
+def Searchangle(Z,ambphi,ambtheta,cam_number =0):
     result = []
     row = Z.shape[0]
     col = Z.shape[1]
@@ -48,11 +67,14 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     m = Zreal[int(row//2):l0,int(col//2):l3]
 
     mmax = np.max(m)
-    plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m/mmax)
-    plt.xlabel("cos(phi)")
-    plt.ylabel("cos(theta)")
-    plt.title("Heatmap Angles sans ambiguités")
-    plt.colorbar()
+    
+    
+    # plt.figure()
+    # plt.contourf(X[int(row//2):l3],Y[int(col//2):l0],m/mmax)
+    # plt.xlabel("cos(phi)")
+    # plt.ylabel("cos(theta)")
+    # plt.title("Heatmap Angles sans ambiguités")
+    # plt.colorbar()
 
     #plt.contourf(X,Y,Z)
     x = np.max(m)
@@ -65,6 +87,8 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     
     v = Y[ligne]
     u = X[colonne]
+    
+    
     #print(u*180/np.pi,v*180/np.pi)
 
    #theta = np.arccos(v)#np.arcsin(v)
@@ -72,11 +96,78 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     theta = np.arccos(v)
     phi = np.arctan2(u,np.sqrt(1-u**2-v**2))
     #print(theta*180/np.pi,phi*180/np.pi)
-    if cam_number == 1 or cam_number ==2:
-        phi = np.arccos(u/np.sin(theta))
-    else:
-        phi = np.arcsin(u/np.sin(theta))
+    # if cam_number == 1 or cam_number ==2:
+    #     phi = np.arccos(u/np.sin(theta))
+    # else:
+    #     phi = np.arcsin(u/np.sin(theta))
     return theta,phi
+
+
+    
+    
+def Searchdv(Z,row,col):
+    result = []
+    
+    Z = np.array(Z)
+    mean = np.mean(Z)
+    var = np.var(Z)
+    norm = np.max(Z)
+    Z = Z/norm 
+    
+    cond = 0
+    falseAlarm = 0
+    while(cond == 0 and len(result)<10 and falseAlarm < treshold):
+        x = np.argmax(Z)
+        
+        if Z[x//row,x%row] >= 0.50  :
+            if checkside(Z,x//row,x%row):
+                result.append(x)
+            else:
+                falseAlarm += 1
+                
+        else: 
+            cond = 1
+        
+        Z = getzeroed(Z,x//row,x%row)
+        #print(Z[x//row,x%row])
+        #plotDV(Z)
+    
+    if np.size(result)==0 :
+        return [], [],[],[]
+    
+    lignes,colonnes = np.unravel_index(result, (row,col))
+    
+    d = lignes* (c/(2*BW))
+    v = (colonnes - col/2)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    
+    return d,v,lignes,colonnes
+    
+def checkside(Z,row,col):
+    
+    large = int(np.floor(largeur/res_d)/2)
+    longeur = int(np.floor(largeur/res_d)/2)#longeur voiture ~ 4m + 1m pour marge
+    a = row-large
+    b = row+large
+    c = col -longeur
+    d = col +longeur
+    
+    if row - large<0 :
+        a = 0
+    if row + large >255:
+        b = 255
+    if col - longeur<0 :
+        c = 0
+    if col + longeur >255:
+        d  = 255
+    
+    # print('mean',np.mean(Z[a:b,c:d]))
+    # print('std',np.std(Z[a:b,c:d]))
+    if np.mean(Z[a:b,c:d]) >0.1 and np.std(Z[a:b,c:d])>0.2:
+        
+        return True
+    return False
+
+
 
 def plotDV(Z):
     dmax = 70
@@ -85,12 +176,11 @@ def plotDV(Z):
     res_v = 0.63/3.6
     
     N=256
-    X = np.linspace(-vmax, vmax, N)
-    Y = np.linspace(0, dmax, N)
-    X, Y = np.meshgrid(X, Y)
+    d = np.arange(256)* (c/(4*BW))
+    v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    plt.figure()
     
-    plt.xlim((-vmax,vmax))
-    plt.contourf(X,Y,20*np.log10(np.abs(Z)))
+    plt.contourf(v,d,Z)
     plt.colorbar()
     plt.xlabel('vitesse [m/s]')
     plt.ylabel('distance [m]')
@@ -98,6 +188,7 @@ def plotDV(Z):
     plt.show()
     
 def plotAngles(Z):
+    plt.figure()
     X = np.linspace(-1,1,Z.shape[0])
     Y = np.linspace(-1,1,Z.shape[1])
     Zmax= np.max(Z)
@@ -107,34 +198,6 @@ def plotAngles(Z):
     plt.ylabel('cos(theta)')
     plt.title('Heatmap (theta,phi)')
     plt.show()
-    
-    
-def Searchdv(Z,row,col):
-    result = []
-    Z = np.array(Z)
-    norm = np.max(Z)
-    Z = Z/norm 
-    
-    cond = 0
-    
-    while(cond == 0):
-        x = np.argmax(Z)
-        #print(Z[x//row,x%row])
-        if Z[x//row,x%row] >= 0.8:
-            
-            result.append(x)
-            
-        else: 
-            cond = 1
-        Z = getzeroed(Z,x//row,x%row)
-         #plotDV(Z)
-    if np.size(result)==0:
-        return [], [],[],[]
-    lignes,colonnes = np.unravel_index(result, (row,col))
-    d = lignes* (c/(4*BW))
-    v = (colonnes - col/2)*(c*np.pi*f_s/(2*w_0*N_s*256))
-    return d,v,lignes,colonnes
-    
 # def Search(picklefile,folder):
 #     infile = open(picklefile,'rb')
 #     new_list = pickle.load(infile)
