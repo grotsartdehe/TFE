@@ -257,7 +257,6 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     omega = np.abs(vabs*math.cos(xsi))
     #print(omega)#micro-doppler
     Za  = np.zeros((N,N))
-    
     """ Generation du microdoppler"""
     # zeta = np.linspace(-pi,pi,N)
     # Aprime =  np.abs((np.cos(zeta)**2)/d * np.exp(-2*1j*k*d/np.cos(phi)))
@@ -276,10 +275,18 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     microdoprange= int((omega/sigma_v )+np.random.normal(loc=2,scale=2))
     amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
     newamp = np.append(amp[::-1],amp[1:])
+    if(pic[1]-len(amp) <= 0):
+        M = 0
+        Z[pic[0],M: pic[1]+len(amp)-1] += amp[0]
+    elif(pic[1]+len(amp) > N):
+        M2 = 255
+        Z[pic[0],pic[1]-len(amp): M2] += amp[0]
+    else:
+        Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
     if vabs-omega < 0:
         tozero = int((v-omega)/sigma_v)
         #newamp[0:tozero]=0
-    Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
+    
     
         
     kernel = np.zeros((5,5))

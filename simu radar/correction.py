@@ -314,7 +314,7 @@ def correction(vect1,vect2,dt = 1/30):
         return vect2
     if vect2 is None:
         return vect2
-    return correctionvitesse(vect1,vect2,dt = dt)
+    return vect2#correctionvitesse(vect1,vect2,dt = dt)
 
 if __name__ == '__main__':
    dataxee = pd.read_csv('data_est.csv',sep=';').values

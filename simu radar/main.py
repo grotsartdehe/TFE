@@ -128,7 +128,6 @@ def CreateandSearch(FX_csv,pos_cam,cam_number):
     
     
     
-    
 
     """Generation et recherche des angles theta, phi limité dans l'espace 
     d'ambiguité"""

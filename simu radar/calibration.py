@@ -10,7 +10,6 @@ import os.path
 import csv
 from main import CreateandSearch
 from correction import correction, correctionAngle
-from numba import cuda
 
 #Supprime les datas de la caméra qui sont cachées
 #Renvoie un nouvel array avec uniquement les datas utiles
@@ -361,21 +360,19 @@ def calibration(L,cm,dimension,data,W,H):
         #theta2 = (H[i]/2-(960-cm[i,0]))*28/1920
         theta1 = (cm[i,0]-W/2 - L[i]/2)*beta/W
         theta2 = (cm[i,0]-W/2)*beta/W
-        theta1 = (cm[i,1]-1080/2 - L[i]/2)*beta/W
-        theta2 = (cm[i,1]-1080/2)*beta/W
-        a = ((cm[i,0]-L[i]/2)-W/2)*(dimension[i]/(L[i]))
         
+        a = ((cm[i,0]-L[i]/2)-W/2)*(dimension[i]/(L[i]))
         #print('hehe',a)
         #distance[i] = (dimension[i]/2+a)/np.sin((theta2)*np.pi/180)
         #print(distance[i])
         #distance[i] = np.sqrt(distance[i]**2 + 5.57**2)
         distance[i] = (dimension[i]/(2))/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
         dd = distanceModif(cm[i],dimension[i],round(L[i]),W,1080)
-        distance[i] = dd
+        #distance[i] = dd
         distance[i] = np.sqrt(5.57**2+distance[i]**2)
         #print('old distance', distance[i])
         #print('new distance',np.mean(dd))
-        distance[i] = dd
+        #distance[i] = dd
         #distance_real[i] = np.sqrt((data[index_i1,3]-Xc)**2+(data[index_i1,4]-Yc)**2+(data[index_i1,5]-Zc)**2)/100
         distance_real[i] = np.sqrt((data_copy[index_i1,3]-Xc)**2+(data_copy[index_i1,4]-Yc)**2+(data_copy[index_i1,5]-Zc)**2)/100
         #print('real distance', distance_real[i])
@@ -409,7 +406,7 @@ def calibration(L,cm,dimension,data,W,H):
     return donnée
 
 def distanceModif(cm,dim,L,W,H):
-    beta = 15.75#28
+    beta = 28
     cm_norm = cm[0] - W/2#cm[1] - H/2
     theta1 = (cm_norm- L/2)*beta/W#(cm_norm- L/2)*beta/H
     #theta2 = (cm-W/2)*beta/W
@@ -459,10 +456,12 @@ def vitesse(data_t,data_old,cm1,cm2,largeur,hauteur):
         #print(cm1[index_i1,:],cm2[i,:])
         #print(distance)
         #if data2[i,0]==2:
+        d1 = data_old[index_i1,0]
         x1 = data_old[index_i1,6]
         y1 = data_old[index_i1,8]
         z1 = data_old[index_i1,10]
         #print('data_old', data_old[index_i1,6],data_old[index_i1,8],data_old[index_i1,10])
+        d2 = data_t[i,0]
         x2 = data_t[i,6]
         y2 = data_t[i,8]
         z2 = data_t[i,10]
@@ -473,6 +472,7 @@ def vitesse(data_t,data_old,cm1,cm2,largeur,hauteur):
         vitesse[i,1] = (data[index_i2,8]/100)
         #print('vitesse estimée', vitesse[i,0])
         #print('vitesse réelle', vitesse[i,1])
+        vitesse[i,0] = (d2-d1)/dt
     return vitesse
 
 def isVehicle(data):
@@ -503,6 +503,7 @@ def isTheSame(data):
                     index = np.append(index,np.append(i,j)).tolist()
                     #print(index)
     return np.array(data_new)
+
 def checkDistance(data,d_radar,d_cam,dim,name,cm,L,W,H,name_data):
     vehicule_dim = pd.read_csv('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/vhDim.csv',sep=';').values
     longueur = vehicule_dim[:,1]
@@ -538,7 +539,6 @@ def checkDistance(data,d_radar,d_cam,dim,name,cm,L,W,H,name_data):
         dist_i = (dimension_new_i/2)/(np.cos(theta2*np.pi/180)*(np.tan(theta2*np.pi/180)-np.tan(theta1*np.pi/180)))
         #print(dimension_new_i)
         if diff_i > np.abs(dist_i-d_radar[i]):
-            #print('changed')
             #d_cam_new[i] = dist_i
             d_cam_new[i] = distanceModif(cm[i],dimension_new_i,round(L[i]),W,H)
         data_new[:,0] = d_cam_new[:]
@@ -573,9 +573,9 @@ def lissage(data1,data2,d):
 
 
 #Fonction principale qui lance toutes les sous fonctions
-cam_number = 0
+cam_number = 4
 name_data = 'data_final'
-count = 515#test de la frame 2437
+count = 400#test de la frame 2437
 
 csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
 pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
@@ -589,7 +589,7 @@ Zc = position_camera['Zpos'][0]#-53546.0
 pitch = position_camera['Pitch'][0]#-12.999
 yaw = position_camera['Yaw'][0]#-2.5
 W = 1920
-H = 1280#1080
+H = 1080
 compteur = 0
 ordre = []
 with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newline='') as myWriter2:
@@ -606,7 +606,6 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
             #data_ant = dataCamera(data_ant)
             #data = dataCamera(data)
             data_ant = dataCamera2(data_ant,W,H)
-            data_test = data
             data = dataCamera2(data,W,H)
             #denormalisation des datas de yolo
             data0[:,1] = data0[:,1]*W#coord x du centre de masse
@@ -645,10 +644,10 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
                 #print(area)
                 dim1,name1 = dimension(cm0,cm1,data_ant,data1,name_data)
                 dim2,name2 = dimension(cm1,cm2,data,data2,name_data)
-                name_test = name2
-                #print(cm2)
-                data_old = calibration(data1[:,4],cm1,dim1,data_ant,W,H)
-                data_t = calibration(data2[:,4],cm2,dim2,data,W,H)
+                
+                data_old = calibration(data1[:,3],cm1,dim1,data_ant,W,H)
+                data_t = calibration(data2[:,3],cm2,dim2,data,W,H)
+                
                 csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
                 pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
                 df = pd.read_csv(pos_cam, sep =';')
@@ -710,7 +709,7 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
             print('100 frames faites', count)
             compteur = 0
         compteur +=1
-        count+=10000
+        count+=1
 A = pd.read_csv('data.csv',sep=';',header = None)
 B = pd.read_csv('data_est.csv',sep=';',header = None)
     
