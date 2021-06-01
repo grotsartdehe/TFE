@@ -478,12 +478,12 @@ def vitesse(data_t,data_old,cm1,cm2,largeur,hauteur):
 def isVehicle(data):
     compteur = 0
     for i in range(len(data)):
-        if data[i,0] != 0 and data[i,0] != 9:
+        if data[i,0] != 0 and data[i,0] != 9 and data[i,0] != 11:
             compteur+=1
     data_new = np.empty((compteur,data.shape[1]))
     compteur = 0
     for i in range(len(data)):
-        if data[i,0] != 0 and data[i,0] != 9:
+        if data[i,0] != 0 and data[i,0] != 9 and data[i,0] != 11:
             data_new[compteur,:] = data[i,:]
             compteur +=1
     return data_new
