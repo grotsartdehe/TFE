@@ -162,7 +162,7 @@ def checkside(Z,row,col):
     
     # print('mean',np.mean(Z[a:b,c:d]))
     # print('std',np.std(Z[a:b,c:d]))
-    if np.mean(Z[a:b,c:d]) >0.1 and np.std(Z[a:b,c:d])>0.2:
+    if np.mean(Z[a:b,c:d]) >0.1 and np.std(Z[a:b,c:d])>0.19:
         
         return True
     return False
@@ -178,6 +178,7 @@ def plotDV(Z):
     N=256
     d = np.arange(256)* (c/(4*BW))
     v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    """
     plt.figure()
     
     plt.contourf(v,d,Z)
@@ -186,18 +187,20 @@ def plotDV(Z):
     plt.ylabel('distance [m]')
     plt.title('Heatmap distance vitesse')
     plt.show()
-    
+    """
 def plotAngles(Z):
-    plt.figure()
+    #plt.figure()
     X = np.linspace(-1,1,Z.shape[0])
     Y = np.linspace(-1,1,Z.shape[1])
     Zmax= np.max(Z)
+    """
     plt.contourf(X,Y,Z/Zmax)
     plt.colorbar()
     plt.xlabel('cos(phi)')
     plt.ylabel('cos(theta)')
     plt.title('Heatmap (theta,phi)')
     plt.show()
+    """
 # def Search(picklefile,folder):
 #     infile = open(picklefile,'rb')
 #     new_list = pickle.load(infile)

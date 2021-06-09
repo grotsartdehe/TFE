@@ -573,7 +573,7 @@ def lissage(data1,data2,d):
 
 
 #Fonction principale qui lance toutes les sous fonctions
-cam_number = 4
+cam_number = 0
 name_data = 'data_final'
 count = 400#test de la frame 2437
 
@@ -685,6 +685,7 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
                         L2 = np.sqrt(((d_ri1-data_r_old[:,0].tolist())**2)).tolist()
                         index_i2 = L2.index(min(L2))
                         
+                        aire_i = data2[i,3]*data2[i,4] #- data1[index_i1,3]
                         #vect_i = np.array([d_i1,theta_i1,phi_i1,v_i1,d_ri1,theta_ri1,phi_ri1,v_ri1])
                         vect1 = np.array([d_i1,theta_i1,phi_i1,d_ri1,theta_ri1,phi_ri1,v_ri1])
                         vect2 = np.array([data_old[index_i1,0],data_old[index_i1,2],data_old[index_i1,4],data_r_old[index_i2,0],data_r_old[index_i2,1],data_r_old[index_i2,2],data_r_old[index_i2,3]])
@@ -702,7 +703,7 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
                         #writer.writerow((d_i1,theta_i1,phi_i1,v_i1,d_ri1,theta_ri1,phi_ri1,v_ri1))
                         #writer.writerow((count,data_corr[0],data_corr[1],data_corr[2],v_i1,data_corr[3],data_corr[4],data_corr[5],data_corr[6]))
                         #writer2.writerow((count,d_i2,theta_i2,phi_i2,v_i2))
-                        writer.writerow((count,x_pred_cam,y_pred_cam,z_pred_cam,v_i1,x_pred_rad,y_pred_rad,z_pred_rad,data_corr[6]))
+                        writer.writerow((count,x_pred_cam,y_pred_cam,z_pred_cam,v_i1,x_pred_rad,y_pred_rad,z_pred_rad,data_corr[6],aire_i))
                         writer2.writerow((count,x_true,y_true,z_true,v_i2))
                         ordre = np.append(ordre,count)
         if compteur == 100:
@@ -712,6 +713,7 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
         count+=1
 A = pd.read_csv('data.csv',sep=';',header = None)
 B = pd.read_csv('data_est.csv',sep=';',header = None)
+
     
     
     

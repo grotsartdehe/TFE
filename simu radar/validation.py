@@ -104,7 +104,9 @@ def calibration(L,cm,dimension,W,H):
         #value_copy.remove(value_copy[index_i1][:])
         #value_copy = np.array(value_copy)
     return donnée
-
+def vitesse(d,d_old,dt):
+    return (d-d_old)/dt
+    
 def checkDistance(d_cam,dim,cm,L,W,H,name_data):
     longueur = 4.5
     largeur = 1.8
@@ -135,16 +137,16 @@ def checkDistance(d_cam,dim,cm,L,W,H,name_data):
         """
     return dist_i
 #count = 250
-def validation_cam(count):
-    name_data = 'data-validation3'
+def validation_cam(count, count1,count2):
+    name_data = 'Prise1'
     W = 1280
     H = 720
     if(os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/image_'+str(count).zfill(4)+'.jpg') == 1):
-        cond = os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count).zfill(4)+'.txt') == 1 and os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count-1).zfill(4)+'.txt') == 1 and os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count-2).zfill(4)+'.txt') == 1
+        cond = os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count).zfill(4)+'.txt') == 1 and os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count1).zfill(4)+'.txt') == 1 and os.path.isfile('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count2).zfill(4)+'.txt') == 1
         #print(cond)
         if(cond):
-            data0 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count-2).zfill(4)+'.txt',sep=' ',header = None).values
-            data1 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count-1).zfill(4)+'.txt',sep=' ',header = None).values
+            data0 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count2).zfill(4)+'.txt',sep=' ',header = None).values
+            data1 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count1).zfill(4)+'.txt',sep=' ',header = None).values
             data2 = pd.read_csv ('C:/Users/Gauthier_Rotsart/Documents/yolov5/runs/detect/'+name_data+'/labels/image_'+str(count).zfill(4)+'.txt',sep=' ',header = None).values
             #print(data0)
             #denormalisation des datas de yolo
@@ -171,17 +173,21 @@ def validation_cam(count):
             data1 = isTheSame(data1)
             data2 = isTheSame(data2)
             
-            #cm0 = np.int32(np.array([data0[:,1].tolist(),data0[:,2].tolist()]).T)
-            cm1 = np.int32(np.array([data1[:,1].tolist(),data1[:,2].tolist()]).T)
-            cm2 = np.int32(np.array([data2[:,1].tolist(),data2[:,2].tolist()]).T)
-            
-            #dim1 = dimension(cm0,cm1)
-            dim2 = dimension(cm1,cm2)
-            
-            data = calibration(data2[:,3],cm2,dim2,W,H)
-            dist_check = checkDistance(data[:,0], dim2, cm2, data2[:,4], W, H, name_data)
-            data_check = data.copy()
-            data_check[:,0] = dist_check
-            return data, data_check
+            if(data0.shape != (0,) and data1.shape != (0,) and data2.shape != (0,)):
+                cm0 = np.int32(np.array([data0[:,1].tolist(),data0[:,2].tolist()]).T)
+                cm1 = np.int32(np.array([data1[:,1].tolist(),data1[:,2].tolist()]).T)
+                cm2 = np.int32(np.array([data2[:,1].tolist(),data2[:,2].tolist()]).T)
+                
+                dim1 = dimension(cm0,cm1)
+                dim2 = dimension(cm1,cm2)
+                
+                data_old = calibration(data1[:,3],cm1,dim1,W,H)
+                data = calibration(data2[:,3],cm2,dim2,W,H)
+                dist_check = checkDistance(data[:,0], dim2, cm2, data2[:,4], W, H, name_data)
+                data_check = data.copy()
+                data_check[:,0] = dist_check
+                return data, data_check, data_old,data2,data1
+            else:
+                return [],[],[],[],[]
         else:
-            return []
+            return [],[],[],[],[]
