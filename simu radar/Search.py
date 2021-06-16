@@ -19,14 +19,33 @@ N_s=256;
 #f_r=22.1 ;
 c = 3e8;
 w_0 = 2*np.pi*f_0;
-BW = 250e6;
+BW = 545e6;
+treshold = 50
+largeur = 3
+res_d = 0.274
 """
 X = np.array([[1,5,8,4],[4,8,3,9],[4,5,6,5]])
 print(X.argsort())"""
 def getzeroed(Z,row,col,classcar=0,res_d = 0.274):
-    large = int(np.floor(5.4/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
+    largeur = 5.4
+    large = int(np.floor(largeur/res_d)/2)
+    longeur = int(np.floor(largeur/res_d)/2)#longeur voiture ~ 4m + 1m pour marge
+    a = row-large
+    b = row+large
+    c = col -longeur
+    d = col +longeur
+    if row - large<0 :
+        a = 0
+    if row + large >255:
+        b = 256
+    if col - longeur<0 :
+        c = 0
+    if col + longeur >255:
+        d  = 256
     
-    Z[row-large:row+large,col-large:col+large]=0
+    
+        
+    Z[a:b,c:d]=0
     return Z
 
 
@@ -48,6 +67,7 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     m = Zreal[int(row//2):l0,int(col//2):l3]
 
     mmax = np.max(m)
+<<<<<<< Updated upstream
     """
     plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m/mmax)
     plt.xlabel("cos(phi)")
@@ -55,6 +75,23 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     plt.title("Heatmap Angles sans ambiguités")
     plt.colorbar()
     """
+=======
+      # plt.figure()
+    # #plt.contourf(X[int(row//2):l3],Y[int(col//2):l0],m/mmax)
+    # plt.contourf(X,Y,Zreal)
+    # plt.xlabel('u [ ]')
+    # plt.ylabel('v [ ]')
+    # plt.title('Carte thermique des angles')
+    # plt.colorbar(label = 'Amplitude [dB]')
+    # plt.figure()
+    # plt.contourf(X[int(row//2):l3],Y[int(col//2):l0],m)
+    
+    # plt.xlabel('u [ ]')
+    # plt.ylabel('v [ ]')
+    # plt.title('Zone sans ambiguïté ')
+    # plt.colorbar(label = 'Amplitude [dB]')
+
+>>>>>>> Stashed changes
     #plt.contourf(X,Y,Z)
     x = np.max(m)
     
@@ -89,10 +126,19 @@ def plotDV(Z):
     X = np.linspace(-vmax, vmax, N)
     Y = np.linspace(0, dmax, N)
     X, Y = np.meshgrid(X, Y)
+<<<<<<< Updated upstream
     """
     plt.xlim((-vmax,vmax))
     plt.contourf(X,Y,20*np.log10(np.abs(Z)))
     plt.colorbar()
+=======
+    
+    d = np.arange(256)* (c/(2*BW))
+    v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    plt.figure()
+    plt.contourf(v,d,20*np.log(np.abs(Z)))
+    plt.colorbar(label = 'Amplitude [dB]',orientation='vertical')
+>>>>>>> Stashed changes
     plt.xlabel('vitesse [m/s]')
     plt.ylabel('distance [m]')
     plt.title('Heatmap distance vitesse')
@@ -111,31 +157,92 @@ def plotAngles(Z):
     plt.show()
     """
     
+# def Searchdv(Z,row,col):
+#     result = []
+#     Z = np.array(Z)
+#     norm = np.max(Z)
+#     Z = Z/norm
+    
+#     cond = 0
+    
+#     while(cond == 0):
+#         x = np.argmax(Z)
+#         #print(Z[x//row,x%row])
+#         if Z[x//row,x%row] >= 0.8:
+            
+#             result.append(x)
+            
+#         else: 
+#             cond = 1
+#         Z = getzeroed(Z,x//row,x%row)
+#          #plotDV(Z)
+#     if np.size(result)==0:
+#         return [], [],[],[]
+#     lignes,colonnes = np.unravel_index(result, (row,col))
+#     d = lignes* (c/(2*BW))
+#     v = (colonnes - col/2)*(c*np.pi*f_s/(2*w_0*N_s*256))
+#     return d,v,lignes,colonnes
+    
 def Searchdv(Z,row,col):
     result = []
     Z = np.array(Z)
+    mean = np.mean(Z)
+    var = np.var(Z)
     norm = np.max(Z)
     Z = Z/norm 
-    
     cond = 0
-    
-    while(cond == 0):
+    falseAlarm = 0
+    while(cond == 0 and len(result)<10 and falseAlarm < treshold):
         x = np.argmax(Z)
-        #print(Z[x//row,x%row])
-        if Z[x//row,x%row] >= 0.8:
-            
-            result.append(x)
-            
+        if Z[x//row,x%row] >= 0.50  :
+            if checkside(Z,x//row,x%row):
+                result.append(x)
+            else:
+                falseAlarm += 1
         else: 
             cond = 1
         Z = getzeroed(Z,x//row,x%row)
-         #plotDV(Z)
-    if np.size(result)==0:
+        
+        plotDV(Z)
+    
+    if np.size(result)==0 :
         return [], [],[],[]
+    
     lignes,colonnes = np.unravel_index(result, (row,col))
-    d = lignes* (c/(4*BW))
+    d = lignes* (c/(2*BW))
     v = (colonnes - col/2)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    
     return d,v,lignes,colonnes
+    
+def checkside(Z,row,col):
+    
+    large = int(np.floor(largeur/res_d)/2)
+    longeur = int(np.floor(largeur/res_d)/2)#longeur voiture ~ 4m + 1m pour marge
+    a = row-large
+    b = row+large
+    c = col -longeur
+    d = col +longeur
+    
+    if row - large<0 :
+        a = 0
+    if row + large >255:
+        b = 256
+    if col - longeur<0 :
+        c = 0
+    if col + longeur >255:
+        d  = 256
+    print(row,col)
+    print(a,b,c,d)
+    print(Z[row,col])
+    print('mean',np.mean(Z[a:b,c:d]))
+    print('std',np.std(Z[a:b,c:d]))
+    if np.mean(Z[a:b,c:d]) >0.1 and np.std(Z[a:b,c:d])>0.2:
+        
+        return True
+    return False
+    
+    
+    
     
 # def Search(picklefile,folder):
 #     infile = open(picklefile,'rb')

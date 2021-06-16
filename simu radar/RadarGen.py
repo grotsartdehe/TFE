@@ -20,7 +20,19 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 tailles_vehicules =pd.read_csv('vehicule_dimension.csv',sep = ';')
-
+f_s = 3.413e6;
+f_0=24e9;
+N_s=256;
+#f_r=22.1 ;
+c = 3e8;
+w_0 = 2*np.pi*f_0;
+BW = 545.5e6;
+largeur = 3
+res_d = 0.274
+treshold = 50
+d = np.arange(256)* (c/(2*BW))
+v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+d,v= np.meshgrid(d, v)
 
 def voiture(d,theta,phi,xsi,a,b):
     """
@@ -98,6 +110,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     X
     X = X + dx
     Y = Y + dy
+<<<<<<< Updated upstream
     """
     plt.figure()
     plt.scatter(Y,X, marker = '.', c = 'black')
@@ -106,6 +119,15 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     plt.ylabel('Axe y [m]')
     plt.title('Position du châssis dans l\'espace')
     """
+=======
+    
+    # plt.figure()
+    # plt.scatter(Y,X, marker = '.', c = 'black')
+    # plt.scatter(0,0,c = 'red')
+    # plt.xlabel('Axe x [m]')
+    # plt.ylabel('Axe y [m]')
+    # plt.title('Position du châssis dans l\'espace')
+>>>>>>> Stashed changes
     distance = np.zeros(8*N)
     for i in range(len(distance)):
         distance[i] = np.sqrt((X[i]**2) + Y[i]**2)
@@ -188,6 +210,7 @@ Argument:
         #1j*np.random.normal(loc = np.imag(mean),scale = np.imag(cov),size = 3)
     
     signal = x*np.exp(1j*k*(ux*dx+vz*dz))
+    signal += np.random.normal(3)+ 1j*np.random.normal(3)
     #print(signal)
     Z = signal[0]*np.exp(-1j*k*(X*dx[0]+Y*dz[0]))+\
         signal[1]*np.exp(-1j*k*(X*dx[1]+Y*dz[1]))+\
@@ -248,9 +271,9 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     N=256
     #pos est une matrice carré donc je suis obligé de faire cette manip
     #pour garder les bonnes proportions je limite le graphe apres
-    X = np.linspace(-vmax, vmax, N)
-    Y = np.linspace(0, dmax, N)
-    X, Y = np.meshgrid(X, Y)
+    dech = np.arange(256)* (c/(2*BW))
+    vech = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    X, Y = np.meshgrid(vech,dech)
     pos = np.empty(X.shape + (2,))
     pos[:, :, 0] = X
     pos[:, :, 1] = Y
@@ -258,13 +281,10 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
         Zdv = np.random.normal(size = (X.shape[0],Y.shape[0]))
         return X,Y,Zdv
     mu = np.array([v,d])
-    omega = np.abs(vabs*math.cos(xsi))
+    
     #print(omega)#micro-doppler
     Za  = np.zeros((N,N))
-    """ Generation du microdoppler"""
-    # zeta = np.linspace(-pi,pi,N)
-    # Aprime =  np.abs((np.cos(zeta)**2)/d * np.exp(-2*1j*k*d/np.cos(phi)))
-    # n =  int(4* k*a * np.cos(phi))
+   
     
     
     
@@ -273,39 +293,62 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     "pic considére comme point speculaire rajout de micro-doppler et à 4/5"
     pic= np.unravel_index(Z.argmax(), Z.shape)
     row,col = pic
+    Z += np.ones((1,1))
     Za = putindex(Za,row,col,index)
-    
         
-    microdoprange= int((omega/sigma_v )+np.random.normal(loc=2,scale=2))
-    amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
-    newamp = np.append(amp[::-1],amp[1:])
-    if(pic[1]-len(amp) <= 0):
-        M = 0
-        Z[pic[0],M: pic[1]+len(amp)-1] += amp[0]
-    elif(pic[1]+len(amp) > N):
-        M2 = 255
-        Z[pic[0],pic[1]-len(amp): M2] += amp[0]
-    else:
-        Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
-    if vabs-omega < 0:
-        tozero = int((v-omega)/sigma_v)
-        #newamp[0:tozero]=0
+    """Generation mirco-doppler old way """
+    #omega = np.abs(vabs*math.cos(xsi))
+    #  microdoprange= int((omega/sigma_v )+np.random.normal(loc=2,scale=2))
+    #  amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
+    #  newamp = np.append(amp[::-1],amp[1:])
+    #  if(pic[1]-len(amp) <= 0):
+    #      M = 0
+    #      Z[pic[0],M: pic[1]+len(amp)-1] += amp[0]
+    #  elif(pic[1]+len(amp) > N):
+    #      M2 = 255
+    #      Z[pic[0],pic[1]-len(amp): M2] += amp[0]
+    #  else:
+    #      Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
+    #  if vabs-omega < 0:
+    #      tozero = int((v-omega)/sigma_v)
+    #      #newamp[0:tozero]=0
+    
+    """Generation Micro-Doppler new"""
+    u = np.arctan(-np.tan(theta)*np.cos(phi))
+    unorm = np.sqrt(1 + u**2)
+    vmin = np.sign(v)*vabs*(1-u/unorm)*np.sin(theta)*np.cos(phi-xsi) + 1/unorm * np.cos(theta)
+    vmax  =np.sign(v)*vabs*(1+u/unorm)*np.sin(theta)*np.cos(phi-xsi) + 1/unorm * np.cos(theta)
+    if vmin < vech[0]:
+        vmin = vech[0]
+    if vmax > vech[-1]:
+        vmax = vech[-1]
+    
+    indexmin = np.argmin((vech - vmin)**2)
+    indexmax = np.argmin((vech-vmax)**2)
+    if indexmin > indexmax :
+        a = indexmin
+        indexmin = indexmax
+        indexmax = a
+    
+    vdoppler = np.zeros(vech.shape)
+    vdoppler[indexmin:indexmax]=0.5
+    Z[pic[0],:] += vdoppler
     
     
-        
-    kernel = np.zeros((5,5))
+    
     chassis = np.abs(long*np.cos(xsi) + largeur*np.sin(xsi))
    
-    dpoints=int(chassis/res_d)
+    dpoints=int(chassis/(res_d*2))
+    kernel = np.zeros((dpoints,3))
     
-    if dpoints >=3 :
-        dpoints=2
     
-    m = np.arange(-2,3)
+    
+    m = np.arange(-1,2)*5
     m = - np.abs(m)
-    kernel[2-dpoints:2+dpoints,:]=0.1
-    kernel[2-dpoints,:]=0.1*np.exp(m)
-    kernel[2+dpoints,:]=0.1*np.exp(m)
+    
+    kernel[:,2]=1/dpoints
+    kernel[0,:]=2*np.exp(m)/dpoints
+    kernel[-1,:]=2*np.exp(m)/dpoints
     Znew =ss.convolve2d(Z,kernel,mode = 'same')
     
     
@@ -315,7 +358,7 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     plt.show()"""
     
     
-    Znew += np.random.normal(scale = 0.3,size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])/50
+    Znew += np.random.normal(scale = 0.15,size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])
     
     return X,Y,Znew,Za
 
@@ -385,39 +428,58 @@ Inputs: classcar: classe du véhicule [string]
             #appartenance[j,1] = d_spec
             #j+=1
     #heatambi = ambig(Z2,appartenance)
-    #plot DV heatmap
+    "plot DV heatmap"
+    plt.figure()
+    d = np.arange(256)* (c/(2*BW))
+    v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    #Z1 = (Z1 - np.mean(Z1)/np.std(Z1))
+    #plt.contourf(v,d,20*np.log(Z1))
+    plt.contourf(v,d,Z1)
+    plt.title('Simulation de carte thermique distance-vitesse ')
+    plt.xlabel('vitesse [m/s]')
+    plt.ylabel('distance [m]')
+    plt.colorbar(label = 'Amplitude [dB]')
+    plt.show()
+    # #plot ambiguité map
     # plt.figure()
-    # plt.contourf(Xdv,Ydv,Z1)
-    # plt.xlim(-70/3.6,70/3.6)
-    # plt.title('Simulation heatmap (d,v)')
-    # plt.xlabel('vitesse [m/s]')
-    # plt.ylabel('distane [m]')
+    # plt.colorbar(label = 'Amplitude [dB]')
+    # X = np.linspace(-1,1,row)
+    # Y  = np.linspace(-1,1,col)
+    # plt.contourf(X,Y,20*np.log(Zamb))
+    # plt.xlabel('u [ ]')
+    # plt.ylabel('v [ ]')
+    # plt.title('Carte thermique des angles pour cas réel')
+    # plt.colorbar(label = 'Amplitude [dB]')
     # plt.colorbar()
     # plt.show()
-    #plot ambiguité map
-    """
-    plt.figure()
-    plt.contourf(Xthetaphi,Ythetaphi,Z2)
-    plt.xlabel('ux = cos(theta)')
-    plt.ylabel('uy = cos(phi)')
-    plt.title("Simu heatmap ux,uy")
-    plt.colorbar()
-    plt.show()"""
     
-
     return Z1,Zamb# ,heatambi
 
-#RadarGen([0,1],[40,60],[-30,50],[np.pi/4,0],[np.pi/6,np.pi/5])
-# lam = 3e8/24e9
-# dx=0.022
-# dz=0.04
-# ambx = lam/(dx) #32.554420177887685 
-# ambz = lam/dz #17,55
-# theta = 88.66171256 
-# phi =  -6.49220671
-# print('theta=',theta*np.pi/180,'phi=',phi*np.pi/180)
-# Hope = ambiguite(theta*np.pi/180,phi*np.pi/180)
-# print(Searchangle(Hope))
+Znew,Za = RadarGen(['5458'],[47.5],[10],[np.pi/2],[-3*np.pi/180],[np.pi/6],[15])
+d,v,row,col = Searchdv(Znew,256,256)
+print(d,v)
+amb = ambiguite(91,-3,dux=0.3125,duy=0.568,cam_number=0)
+plt.figure()
+
+X = np.linspace(-1,1,1024)
+Y  = np.linspace(-1,1,1024)
+# plt.contourf(X,Y,20*np.log(amb))
+# plt.xlabel('u [ ]')
+# plt.ylabel('v [ ]')
+# plt.title('Simulation  de carte thermique des angles ')
+# plt.colorbar(label = 'Amplitude [dB]')
+
+plt.show()
+# # lam = 3e8/24e9
+# # dx=0.022
+# # dz=0.04
+# # ambx = lam/(dx) #32.554420177887685 
+# # ambz = lam/dz #17,55
+# # theta = 88.66171256 
+# # phi =  -6.49220671
+# # print('theta=',theta*np.pi/180,'phi=',phi*np.pi/180)
+# # Hope = ambiguite(theta*np.pi/180,phi*np.pi/180)
+# # print(Searchangle(Hope))
 
 
 
