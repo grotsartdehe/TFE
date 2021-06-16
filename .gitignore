@@ -10,3 +10,4 @@ simu radar/bigfile750
 *.csv
 *.raw
 *.pickle
+*.txt
