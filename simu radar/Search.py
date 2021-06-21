@@ -67,15 +67,7 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     m = Zreal[int(row//2):l0,int(col//2):l3]
 
     mmax = np.max(m)
-<<<<<<< Updated upstream
-    """
-    plt.contourf(X[int(col//2):l3]*180/np.pi,Y[int(row//2):l0]*180/np.pi,m/mmax)
-    plt.xlabel("cos(phi)")
-    plt.ylabel("cos(theta)")
-    plt.title("Heatmap Angles sans ambiguités")
-    plt.colorbar()
-    """
-=======
+
       # plt.figure()
     # #plt.contourf(X[int(row//2):l3],Y[int(col//2):l0],m/mmax)
     # plt.contourf(X,Y,Zreal)
@@ -91,7 +83,7 @@ def Searchangle(Z,ambphi=0.5681818181818182,ambtheta=0.3125,cam_number =0):
     # plt.title('Zone sans ambiguïté ')
     # plt.colorbar(label = 'Amplitude [dB]')
 
->>>>>>> Stashed changes
+
     #plt.contourf(X,Y,Z)
     x = np.max(m)
     
@@ -126,7 +118,7 @@ def plotDV(Z):
     X = np.linspace(-vmax, vmax, N)
     Y = np.linspace(0, dmax, N)
     X, Y = np.meshgrid(X, Y)
-<<<<<<< Updated upstream
+
     """
     plt.xlim((-vmax,vmax))
     plt.contourf(X,Y,20*np.log10(np.abs(Z)))
@@ -203,7 +195,7 @@ def Searchdv(Z,row,col):
             cond = 1
         Z = getzeroed(Z,x//row,x%row)
         
-        plotDV(Z)
+        #plotDV(Z)
     
     if np.size(result)==0 :
         return [], [],[],[]
@@ -231,11 +223,7 @@ def checkside(Z,row,col):
         c = 0
     if col + longeur >255:
         d  = 256
-    print(row,col)
-    print(a,b,c,d)
-    print(Z[row,col])
-    print('mean',np.mean(Z[a:b,c:d]))
-    print('std',np.std(Z[a:b,c:d]))
+    
     if np.mean(Z[a:b,c:d]) >0.1 and np.std(Z[a:b,c:d])>0.2:
         
         return True

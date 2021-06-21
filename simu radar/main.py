@@ -91,7 +91,6 @@ def extract(df,pos_cam):
     #print(xsi*180/np.pi)
     #store = np.array([d[cond],theta[cond]*180/np.pi,phi[cond]*180/np.pi,v1[cond]]).T
     #print(store)
-    
    
     
     return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond],v[cond]#+pi/2
@@ -123,6 +122,7 @@ def CreateandSearch(FX_csv,pos_cam,cam_number):
     data = pd.read_csv(FX_csv,sep =';',index_col=False )
     d_real,v_real,theta,phi,classcar,xsi,vabs = extract(data,pos_cam)
     v_real = v_real.values
+    print("vitesse", v_real)
     """Generation et recherche dsitance, vitessede heatmap d,v"""
     Zdv,Za = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi,vabs.values)
     #plotDV(Zdv)

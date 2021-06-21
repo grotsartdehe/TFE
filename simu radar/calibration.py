@@ -573,9 +573,9 @@ def lissage(data1,data2,d):
 
 
 #Fonction principale qui lance toutes les sous fonctions
-cam_number = 0
+cam_number = 1
 name_data = 'data_final'
-count = 400#test de la frame 2437
+count = 709#400#test de la frame 2437
 
 csv_folder= 'C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel'#/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
 pos_cam = os.path.join(csv_folder,'pos_cam_0'+str(cam_number)+'.csv')
@@ -653,6 +653,7 @@ with open('data_est.csv','w',newline='') as myWriter, open('data.csv','w',newlin
                 df = pd.read_csv(pos_cam, sep =';')
                 pos_cam = df.values[1,:]#[df.iloc[2]['Xpos'],df.iloc[2]['Ypos'],df.iloc[2]['Zpos']]
                 data_r = CreateandSearch('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count).zfill(8)+'.csv', pos_cam,cam_number)
+                
                 data_r_old = CreateandSearch('C:/Users/Gauthier_Rotsart/Documents/yolov5/data/images/'+name_data+'/cam_0'+str(cam_number)+'/Excel/0'+str(cam_number)+'_'+str(count-1).zfill(8)+'.csv', pos_cam,cam_number)
                 if(len(data_r)!=0 and len(data_r_old) != 0):
                     data_r_test = data_r

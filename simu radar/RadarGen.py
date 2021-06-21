@@ -110,16 +110,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     X
     X = X + dx
     Y = Y + dy
-<<<<<<< Updated upstream
-    """
-    plt.figure()
-    plt.scatter(Y,X, marker = '.', c = 'black')
-    plt.scatter(0,0,c = 'red')
-    plt.xlabel('Axe x [m]')
-    plt.ylabel('Axe y [m]')
-    plt.title('Position du châssis dans l\'espace')
-    """
-=======
+
     
     # plt.figure()
     # plt.scatter(Y,X, marker = '.', c = 'black')
@@ -127,7 +118,7 @@ Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehi
     # plt.xlabel('Axe x [m]')
     # plt.ylabel('Axe y [m]')
     # plt.title('Position du châssis dans l\'espace')
->>>>>>> Stashed changes
+
     distance = np.zeros(8*N)
     for i in range(len(distance)):
         distance[i] = np.sqrt((X[i]**2) + Y[i]**2)
