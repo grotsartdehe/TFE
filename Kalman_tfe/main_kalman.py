@@ -18,7 +18,17 @@ from meta_para import *
 import pandas as pd
 import matplotlib.pyplot as plt
 from correction import correctionAngle
-
+import time  
+class Timer(object):  
+    def start(self):  
+        if hasattr(self, 'interval'):  
+            del self.interval  
+        self.start_time = time.time()  
+  
+    def stop(self):  
+        if hasattr(self, 'start_time'):  
+            self.interval = time.time() - self.start_time  
+            del self.start_time # Force timer reinit  
 def kalman(data_esti, data5):
     """
     
@@ -46,40 +56,42 @@ def kalman(data_esti, data5):
     data[:,5::] = transform(data[:,5::])
     truth_gr[:,1::] = transform(truth_gr[:,1::])
     tracks = []
-    #plt.figure()
-    # plt.title('Kalman trajectoire vs ground truth')
-    # plt.xlabel('axe x [m]')
-    # plt.ylabel('axe y [m]')
+    # plt.figure()
+    # plt.title('Trajectoire filtre de Kalman avec paramètres adaptés')
+    # plt.xlabel('X(t) [m]')
+    # plt.ylabel('Y(t) [m]')
     k1=0
     i = 0
     MSE = np.zeros(int(len(data) ))
     
+    maxim =0 
     for index in (range(int(data[0,0]),int(data[-1,0]))):
-    #for index in (range(int(1500),int(1950))):
-        if index //50 ==0:
-            print(index)
+    #for index in (range(int(1580),int(1680))):
+        # if index //50 ==0:
+            #print(index)
         tracks = kalman_estimate(tracks, data[data[:,0]==index])
         #if len(tracks) > 0:
-        
+        #print(len(tracks))
+        maxim = max(maxim,len(tracks))
         count = 0
         for k in tracks:
             #print(k.X)
             x,y,z = getcarte(k.X)
-            #plt.scatter(x,y,c = 'blue')
+            #plt.scatter(y,x,c = 'blue')
             
-        for m in range(len(truth_gr[truth_gr[:,0]==index])):
-            inter = truth_gr[truth_gr[:,0]==index]
-            #print('truth',inter[m,1::])
-            x1,y1,z1 =getcarte(inter[m,1::])
-            #plt.scatter(x1,y1,c = 'red')
-            #plt.legend(['Kalman Filter','ground truth'])
+        # for m in range(len(truth_gr[truth_gr[:,0]==index])):
+        #     inter = truth_gr[truth_gr[:,0]==index]
+        #     #print('truth',inter[m,1::])
+        #     x1,y1,z1 =getcarte(inter[m,1::])
+        #     plt.scatter(x1,y1,c = 'orange')
+        #     plt.legend(['trajectoire du fi'trajectoire réelle'])
             
-        inter = truth_gr[truth_gr[:,0]==index]
-        L2,index = assos(tracks,inter[:,1::])
-        p =L2.argsort()
+        # inter = truth_gr[truth_gr[:,0]==index]
+        # L2,index = assos(tracks,inter[:,1::])
+        # p =L2.argsort()
         #print(L2)
         
-        MSE[i] = np.mean(L2[L2<200])
+        #MSE[i] = np.mean(L2[L2<200])
         i += 1
     
     # plt.figure()
@@ -88,27 +100,27 @@ def kalman(data_esti, data5):
     # plt.xlabel('iteration i')
     # plt.ylabel('MSE')
     
-    print("MSE",np.mean(MSE[MSE>0]))
+    #print("MSE",np.mean(MSE[MSE>0]))
     #Lister.append(np.mean(MSE[MSE>0]))
-    return(np.mean(MSE[MSE>0]))
+    return(np.mean(MSE[MSE>0])),maxim
     
     
 def assos(tracks,truth):
     mindist = np.ones(len(tracks))*500
     index = np.zeros(len(tracks))
-    for i in tracks:
+    for i in range(len(tracks)):
         
-        x,y,z = getcarte(i.X)
+        x,y,z = getcarte(tracks[i].X)
         for j in range(truth.shape[0]):
             x0,y0,z0 = getcarte(truth[j,1::])
             dist = np.sqrt((x-x0)**2 +(y-y0)**2+(z-z0)**2)
             #dist += np.sqrt((i.X[j,-1] -truth[j,-1] )**2)
             
-            if dist < mindist[j]:
-                mindist[j]= dist
+            if dist < mindist[i]:
+                mindist[i]= dist
                 #print(i.X)
                 #print(truth[j,1::])
-                index[j] = j
+                index[i] = j
     
     return mindist,index
 
@@ -197,8 +209,8 @@ def housekeep(tracks, detections, new = 0):
         for n in new:
             det = n[1]
             
-            
-            new_thresh = 0.5#new_thresh_classes[det.get_class()]
+            #
+            #new_thresh = 0.5#new_thresh_classes[det.get_class()]
             
             if(n[2] > new_thresh):
 
@@ -230,14 +242,14 @@ def housekeep(tracks, detections, new = 0):
 
         obs = False
 
-        for t in tracks:
+        # for t in tracks:
             
-            thresh = 0#*math.degrees(math.atan(objects_obs_size[t.classe]/(2*t.X[2])))
-            if(abs(tr.X[0] - t.X[0]) < thresh and (tr.X[2] > t.X[2]) and tr.min_det > min_det_obstruction):
-                if(t.min_det > min_obs_front):
-                    tr.obstruction += 1
-                    obs = True
-                    print('obs')
+            # thresh = 0#*math.degrees(math.atan(objects_obs_size[t.classe]/(2*t.X[2])))
+            # if(abs(tr.X[0] - t.X[0]) < thresh and (tr.X[2] > t.X[2]) and tr.min_det > min_det_obstruction):
+            #     if(t.min_det > min_obs_front):
+            #         tr.obstruction += 1
+            #         obs = True
+            #         print('obs')
 
         if(obs == False):
             tr.obstruction = 0
@@ -282,7 +294,7 @@ def associate(tracks, detections):
     except TypeError:
         print('TYPERRROR in associate')
         return (tracks, detections, [], [])
-    R = R_cam @ Rinv @ R_rad
+    R = Rinv
     distances = [(0,0,0.0) for x in range(0,(len(tracks)*len(detections)))]
     i = 0
     k = 0
@@ -379,9 +391,9 @@ def update(tracks, detections, associated, new):
         sum_p[e[0]] += math.exp(-0.5*e[2])    # sum_{l=1}^{m'} exp(0.5*(d{i,l})^2)
         
     prob = []
-    classes = [] 
-    for tr in tracks:
-        classes.append((0.0, tr.classe))
+    # classes = [] 
+    # for tr in tracks:
+    #     classes.append((0.0, tr.classe))
         
     prob_0 = [(x,0,1.0) for x in range(0,len(tracks))] 
     for e in associated:
@@ -479,26 +491,67 @@ def drawing(res,ground_,figures):
     plt.title('trajectoire Kalman vs réelle trajectoire')
     plt.scatter(x_true,y_true,c= 'red')
     plt.legend(['traj estimated','traj réele'])
+"simulation"
+# def getcarte(res):
+#     x = res[0] * np.sin(res[1] )* np.cos(res[2])
+#     y = res[(0)] * np.sin(res[1] )* np.sin(res[2])
+#     z = res[0]*np.cos(res[1])
+#     return x,y,z
+"cas réel"
 def getcarte(res):
-    x = res[0] * np.sin(res[1] )* np.cos(res[2])
-    y = res[(0)] * np.sin(res[1] )* np.sin(res[2])
-    z = res[0]*np.cos(res[1])
+    x = res[0] * np.sin(res[1] *np.pi/180)* np.cos(res[2]*np.pi/180)
+    y = res[(0)] * np.sin(res[1] *np.pi/180)* np.sin(res[2]*np.pi/180)
+    z = res[0]*np.cos(res[1]*np.pi/180)
     return x,y,z
 
 
 
-data_esti = 'data_est_radial.csv'
-data = 'data_radial.csv'
+data_esti = 'data_est_cam00.csv'
+data = 'data_cam00.csv'
+#data_esti = 'data_final_ok.csv'
+aA = pd.read_csv(data_esti,sep=';',header = None).values
 parameters = [1]
 Lister = []
+maxim = []
 for o in parameters:
         params = kalman_params()
-        
-        Lister.append(kalman(data_esti,data))
-plt.plot(parameters,Lister)
-plt.title('MSE par age maximale de la piste non associée')
-plt.xlabel('age maximale de la piste non  associée')
-plt.ylabel('MSE')
+                #min_dist_gate = o
+        #max_invisible_no_obs = 
+        #min_det_obstruction = o #nope
+        #max_invisible_obs = o #200np.linspace(0,20,20)
+        # min_obs_front = 0 #influence pas
+        # delta_time = 1/30 
+        #min_dist_gate = o#0.28 #influence
+        #max_invisible_no_obs
+        #lambda_fp = 0 #math.sqrt(2*math.pi)*4.0 #parametre useless
+        #max_invisible_no_obs = o#influence np.linspace(0,20,20)
+        #new_thresh = o
+        timer = Timer()
+        timer.start()
+        L,maxi =    kalman(data_esti,data)
+        timer.stop()
+        print(timer.interval)
+        # Lister.append(L)
+        # maxim.append(maxi)
+x_cam = aA[:,1]*np.sin(aA[:,2]*np.pi/180)*np.cos(aA[:,3]*np.pi/180)
+y_cam = aA[:,1]*np.sin(aA[:,2]*np.pi/180)*np.sin(aA[:,3]*np.pi/180)
+x_rad = aA[:,5]*np.sin(aA[:,6]*np.pi/180)*np.cos(aA[:,7]*np.pi/180)
+y_rad = aA[:,5]*np.sin(aA[:,6]*np.pi/180)*np.sin(aA[:,7]*np.pi/180)
+
+# plt.figure()
+# plt.scatter(x_cam,y_cam,c = 'blue')
+# plt.scatter(x_rad,y_rad,c = 'red')
+# plt.plot(parameters,Lister)
+# # # #plt.plot(parameters,maxim)
+# plt.title('MSE par âge maximale de piste non associée ')
+# plt.xlabel('âge maximale de piste non associée')
+# plt.ylabel('MSE')
+# # vrai = pd.read_csv(data,sep=';',header=None).values
+# Lister.append(kalman(data_esti,data))
+# plt.plot(parameters,Lister)
+# plt.title('MSE par age maximale de la piste non associée')
+# plt.xlabel('age maximale de la piste non  associée')
+# plt.ylabel('MSE')
 # vrai = pd.read_csv(data,sep=';',header=None).values
 # esti = pd.read_csv(data_esti,sep=';',header=None).values
 # data_cam = transform(esti[:,1:5])

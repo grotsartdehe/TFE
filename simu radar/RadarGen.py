@@ -446,10 +446,12 @@ Inputs: classcar: classe du véhicule [string]
     
     return Z1,Zamb# ,heatambi
 
-Znew,Za = RadarGen(['5458'],[47.5],[10],[np.pi/2],[-3*np.pi/180],[np.pi/6],[15])
+Znew,Za = RadarGen(['5458'],[47.5],[10],[93.83*np.pi/180],[68.866*np.pi/180],[np.pi/6],[15])
 d,v,row,col = Searchdv(Znew,256,256)
 print(d,v)
 amb = ambiguite(91,-3,dux=0.3125,duy=0.568,cam_number=0)
+a,b = (Searchangle(amb))
+print(a*180/np.pi,b*180/np.pi)
 plt.figure()
 
 X = np.linspace(-1,1,1024)

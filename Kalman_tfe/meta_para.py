@@ -26,18 +26,18 @@ associate_det_one = True
 
 #obstruction_thresh = 0.0
 min_det_obstruction = 5 #nope
-max_invisible_obs = 100 #200
-min_obs_front =200 #influence pas
+max_invisible_obs = 10 #200
+min_obs_front = 0 #influence pas
 
-
+new_thresh = 50
 
 
 
 
 delta_time = 1/30 
-min_dist_gate = 1.26#0.28 #influence
+min_dist_gate = 3#0.28 #influence
 lambda_fp = 1 #math.sqrt(2*math.pi)*4.0 #parametre useless
-max_invisible_no_obs = 200 #influence
+max_invisible_no_obs = 6 #influence
 
 
 
@@ -75,8 +75,8 @@ init_P = np.array(
       [0.0,0.0,0.0,0.0,0.0,50.0]]) #n'influenc epas
 vari_R_r = np.linalg.inv(np.array(
       [[11.0,0,0.0,0.0,0.0,0.0],\
-      [0,0.1,0.0,0.0,0.0,0.0],\
-      [0.0,0.0,0.1,0.0,0.0,0.0],\
+      [0,0.000223217,0.0,0.0,0.0,0.0],\
+       [0.0,0.0,0.00616422,0.0,0.0,0.0],\
       [0.0,0.0,0.0,13.5,0.0,0.0],\
       [0.0,0.0,0.0,0.0,1e-10,0.0],\
       [0.0,0.0,0.0,0.0,0.0,1e-10]]))
@@ -116,4 +116,43 @@ vari_R_c =np.linalg.inv( np.array(
 #       [0.0,0.0,0.0,15.0,0.0,0.0],\
 #       [0.0,0.0,0.0,0.0,10.0,0.0],\
 #       [0.0,0.0,0.0,0.0,0.0,10.0]]))
+"validation experimentale"
+init_P = np.array(
+      [[100.0,0.0,0.0,0.0,0.0,0.0],\
+      [0.0,50.0,0.0,0.0,0.0,0.0],\
+      [0.0,0.0,50.0,0.0,0.0,0.0],\
+      [0.0,0.0,0.0,100.0,0.0,0.0],\
+      [0.0,0.0,0.0,0.0,50.0,0.0],\
+      [0.0,0.0,0.0,0.0,0.0,50.0]]) #n'influenc epas
+vari_R_r = np.linalg.inv(np.array(
+      [[5.0,0,0.0,0.0,0.0,0.0],\
+      [0,10,0.0,0.0,0.0,0.0],\
+        [0.0,0.0,50,0.0,0.0,0.0],\
+      [0.0,0.0,0.0,13.5,0.0,0.0],\
+      [0.0,0.0,0.0,0.0,1e-10,0.0],\
+      [0.0,0.0,0.0,0.0,0.0,1e-10]]))
+vari_R_c =np.linalg.inv( np.array(
+      [[50,0.0,0.0,0.0,0.0,0.0],\
+      [0.0,1,0.0,0.0,0.0,0.0],\
+      [0.0,0.0,1,0.0,0.0,0.0],\
+      [0.0,0.0,0.0,136.0,0.0,0.0],\
+      [0.0,0.0,0.0,0.0,1e-10,0.0],\
+      [0.0,0.0,0.0,0.0,0.0,1e-10]]))
+vari_Q = np.array(
+      [[0.274,0.0,0.0,0.0,0.0,0.0],\
+      [0.0,0.1,0.0,0.0,0.0,0.0],\
+      [0.0,0.0,0.1,0.0,0.0,0.0],\
+      [0.0,0.0,0.0,0.175,0.0,0.0],\
+      [0.0,0.0,0.0,0.0,5,0.0],\
+      [0.0,0.0,0.0,0.0,0.0,5]]) #influence
+delta_time = 1/20
+#obstruction_thresh = 0.0
+min_det_obstruction = 5 #nope
+max_invisible_obs = 200
 
+new_thresh = 1
+
+
+min_dist_gate = 30#0.28 #influence
+lambda_fp = 1 #math.sqrt(2*math.pi)*4.0 #parametre useless
+max_invisible_no_obs = 10 #influence
