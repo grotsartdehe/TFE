@@ -4,7 +4,7 @@ Created on Tue Mar  9 18:56:45 2021
 
 @author: Gauthier_Rotsart
 """
-
+#Pour mémoire: calibration de la caméra en utilisant les coordonnées homogènes
 import numpy as np
 import cv2
 from calib3d import Point3D, Point2D
