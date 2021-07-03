@@ -3,7 +3,7 @@
 Created on Sun Mar  7 18:35:07 2021
 Pour generer et rechercher données tu as besoin de 3 fichiers
 le main.py (ce fichier), RadarGen.py et Search.py 
-Je dois encore mettre le code au propre
+
 @author: kdesousa
 """
 
@@ -18,15 +18,19 @@ import pickle
 
 def extract(df,pos_cam):
     """
+    Extrait les données du fichier csv 
     Parameters
     ----------
     dataframe : panda dataframe
     Returns
     -------
     d : liste of distance.
-    v : liste de vitesse
+    vrad : liste de vitesse
     theta : angle azimutale
     phi : angle d'élevationmain.py
+    classcar: classe du véhcule
+    xsi: angle de rotation du véhicule: attention celui-ci n'est pas adapté à la vue des caméra'
+    v: la vitesse absolu du véhicule
     
     """
     Xpos1 = (df['XPos']-pos_cam[1])/100
@@ -93,13 +97,14 @@ def extract(df,pos_cam):
     #print(store)
    
     
-    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond],v[cond]#+pi/2
+    return d[cond],v1[cond],theta[cond],phi[cond],classcar[cond],xsi[cond],v[cond]
     
     
     
 def CreateandSearch(FX_csv,pos_cam,cam_number):
     """
-    
+    utilise le fichier csv fourni pour extraire les données qui sont ensuite transformé en 
+    carte thermiques dont les infos sont ensuite extrait par la fonction search
 
     Parameters
     ----------
@@ -107,7 +112,7 @@ def CreateandSearch(FX_csv,pos_cam,cam_number):
     emplacement ficher csv
     
     pos_cam : list 
-    [Xpos, Ypos,Zpos]
+    cam_number: numero de cam
         
 
     Returns
@@ -122,10 +127,11 @@ def CreateandSearch(FX_csv,pos_cam,cam_number):
     data = pd.read_csv(FX_csv,sep =';',index_col=False )
     d_real,v_real,theta,phi,classcar,xsi,vabs = extract(data,pos_cam)
     v_real = v_real.values
-    print("vitesse", v_real)
+    
     """Generation et recherche dsitance, vitessede heatmap d,v"""
     Zdv,Za = RadarGen(classcar.values,d_real,v_real,theta,phi,xsi,vabs.values)
-    #plotDV(Zdv)
+    
+    plotDV(Zdv)
     d_esti,v_esti,lignes, colonnes = Searchdv(Zdv,256,256)
     
     
@@ -171,6 +177,7 @@ def CreateandSearch(FX_csv,pos_cam,cam_number):
     return lister
         
         
+""" test de l'utilisation de la fonction"""
 if __name__ == '__main__':
     csv_folder= '/home/kdesousa/Documents/GitHub/TFE/Kalman/2021_04_06_15_40_39_604/cam_00'
     cam_number = int( csv_folder[-1])
@@ -196,7 +203,7 @@ if __name__ == '__main__':
                 d_real,v_real,theta,phi,classcar,xsi,vabs = extract(df,pos_cam)
                 v_abs = df['Vel']/100 
                 v_abs = v_abs[v_real.index].values
-                
+                print(d_real,v_real)
                 test = CreateandSearch(file,pos_cam,cam_number)
                 print(test)
                 if len(test)==0:

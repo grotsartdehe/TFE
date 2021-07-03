@@ -106,6 +106,7 @@ def kalman(data_esti, data5):
     
     
 def assos(tracks,truth):
+    "associer track a ground truth"
     mindist = np.ones(len(tracks))*500
     index = np.zeros(len(tracks))
     for i in range(len(tracks)):
@@ -127,6 +128,7 @@ def assos(tracks,truth):
 
 
 def transform(df):
+    " coordonne cartesienne à spherique"
     X = df[:,0]
     Y = df[:,1]
     Z = df[:,2]
@@ -138,6 +140,7 @@ def load_data(data):
     data = pd.read_csv(data,sep=';',header = None).values
     return data
 def kalman_estimate(tracks,detections):
+    
     #print('debut estimate',tracks)
     if len(tracks)==0:
         return housekeep(tracks,detections)
@@ -268,7 +271,7 @@ def housekeep(tracks, detections, new = 0):
     return tracks
 
 def predict(tracks):
-
+    "etape de prédiction"
     F,H,Q,Rinv,R_cam,R_rad = params.get_matrices()
     
     for tr in tracks:
@@ -286,7 +289,7 @@ def predict(tracks):
     return tracks
 
 def associate(tracks, detections):
-
+    "etape association"
     dt, gate, lamb, max_invisible = params.get_params()
 
     try:

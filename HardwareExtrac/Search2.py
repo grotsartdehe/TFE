@@ -144,7 +144,7 @@ def Searchdv(Z,row,col):
     return d,v,lignes,colonnes
     
 def checkside(Z,row,col):
-    
+    "check les alentours de la heatmap"
     large = int(np.floor(largeur/res_d)/2)
     longeur = int(np.floor(largeur/res_d)/2)#longeur voiture ~ 4m + 1m pour marge
     a = row-large
@@ -155,11 +155,11 @@ def checkside(Z,row,col):
     if row - large<0 :
         a = 0
     if row + large >255:
-        b = 255
+        b = 256
     if col - longeur<0 :
         c = 0
     if col + longeur >255:
-        d  = 255
+        d  = 256
     
     # print('mean',np.mean(Z[a:b,c:d]))
     # print('std',np.std(Z[a:b,c:d]))
@@ -199,117 +199,7 @@ def plotAngles(Z):
     plt.ylabel('cos(theta)')
     plt.title('Heatmap (theta,phi)')
     plt.show()
-# def Search(picklefile,folder):
-#     infile = open(picklefile,'rb')
-#     new_list = pickle.load(infile)
-#     infile.close()
 
-#     for i in new_list:
-#         heatmapDV,heatmapsAngles = i.getdata()
-#         count = i.getcounter()
-#         """plotDV(heatmapDV)
-#         """
-#         #plotAngles(heatmapsAngles[2,:,:])
-#         row = heatmapDV.shape[0]
-#         col = heatmapDV.shape[1]
-#         d,v = Searchdv(heatmapDV,row,col)
-#         """lignes,colonnes = np.unravel_index(res, (row,col))
-#         d = lignes* (c/(4*BW))
-#         v = (colonnes - col/2)*(c*np.pi*f_s*3.6*2/(2*w_0*N_s*256))
-#         name = 'data_'+ str(count).zfill(4)+ '.txt'
-#         name = os.path.join(folder,name)
-#         file = open(name,'w')
-#         file.write('d v \n') 
-#         for j in range(len(v)):
-            
-#             file.write(str(d[j]) +' ' +str(v[j]) + '\n')
-#         file.close()"""
-        
-#     """Nouvelle methode """
-# """def InsideLook(Z,dindex,vindex,res_d = 0.274):
-#     large = int(np.floor(5/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
-#     dindex= int(dindex)
-#     vindex = int(vindex)
-#     m = Z[dindex-large:dindex+large,vindex-large:vindex+large]
-#     maximum = np.max(m)
-#     trouved,trouvev = np.where(Z==maximum)
-#     if len(trouved) != 1:
-#         mini = np.argmin((trouved - dindex)**2 + (trouvev - vindex)**2)
-#         return trouved[mini], trouvev[mini]
-#     else:
-#         return trouved[0],trouvev[0]
-    
-    
-# def LookDV(file,heatmapDV):
-#     A = pd.read_csv(file,sep = ' ')
-#     d = A['d']
-    
-#     v = A['v']
-#     newdlist=[]
-#     newvlist=[]
-#     dindex =np.floor(d/(c/(4*BW)))
-    
-#     vindex =np.floor( v/(c*np.pi*f_s*3.6*2/(2*w_0*N_s*256)) + v.shape[0]/2)
-#     for i in range(len(dindex)):
-#         newdindex,newvindex = InsideLook(heatmapDV,dindex[i],vindex[i])
-#         newd = newdindex* (c/(4*BW))
-#         newv = (newvindex)*(c*np.pi*f_s*3.6*2/(2*w_0*N_s*256))
-#         newdlist = np.append(newdlist,newd)
-#         newvlist = np.append(newvlist,newv)
-#     return newdlist,newvlist
-
-# def association(d,v,cores):
-#     assolist = []
-#     for i in range(d.shape[0]):
-#         dist = (d[i]-cores[:,0])**2 + (v[i]-cores[:,1])**2
-#         indic = np.argmin(dist)
-#         assolist = np.append(assolist,indic)
-#         #d = numpy.delete(d, (indic), axis=0)
-#         #v = numpy.delete(v, (indic), axis=0)
-#     return assolist
-        
-
-# def Searchv2(picklefile,file):
-#     infile = open(picklefile,'rb')
-#     new_list = pickle.load(infile)
-#     infile.close()
-
-#     for i in new_list:
-#         heatmapDV,heatmapsAngles = i.getdata()
-#         count = i.getcounter()
-#         cores = heatmapsAngles.getCores()
-#         heatmapsAngles = heatmapsAngles.getZ()
-#         newd,newv= LookDV(file,heatmapDV)
-        
-#         index = association(newd,newv,cores)
-        
-    
-#         plotDV(heatmapDV)
-        
-#         #plotAngles(heatmapsAngles[2,:,:])
-
-#      name = 'data_'+ str(count).zfill(4)+ '.txt'
-#         name = os.path.join(folder,name)
-#         file = open(name,'w')
-#         file.write('d v \n') 
-#         for j in range(len(v)):
-            
-#             file.write(str(d[j]) +' ' +str(v[j]) + '\n')
-#         file.close()"""
-    
-    
-    
-# if __name__ == "__main__":
-#     filename = 'bigfile1322'
-#     file = 'test.txt'
-#     folder = '/home/kdesousa/Documents/GitHub/TFE/Kalman/Data/radar/data-FX'
-#     Searchv2(filename,file)
-#     #Search(l,l.shape[0],l.shape[1])
-    
-    
-    #index = Searchangle(heatmapsAngles,len(lignes))
-        #costheta,cosphi = np.unravel_index(index,heatmapsAngles[0,:,:].shape[0],
-                                        #heatmapsAngles[0,:,:].shape[1])
                                         
                                         
     

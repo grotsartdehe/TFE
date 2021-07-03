@@ -119,23 +119,15 @@ def plotDV(Z):
     Y = np.linspace(0, dmax, N)
     X, Y = np.meshgrid(X, Y)
 
-    """
-    plt.xlim((-vmax,vmax))
-    plt.contourf(X,Y,20*np.log10(np.abs(Z)))
-    plt.colorbar()
-=======
+
     
     d = np.arange(256)* (c/(2*BW))
     v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
     plt.figure()
-    plt.contourf(v,d,20*np.log(np.abs(Z)))
+    plt.contourf(v,d,np.abs(Z))
     plt.colorbar(label = 'Amplitude [dB]',orientation='vertical')
->>>>>>> Stashed changes
-    plt.xlabel('vitesse [m/s]')
-    plt.ylabel('distance [m]')
-    plt.title('Heatmap distance vitesse')
-    plt.show()
-    """
+
+    
 def plotAngles(Z):
     X = np.linspace(-1,1,Z.shape[0])
     Y = np.linspace(-1,1,Z.shape[1])
@@ -223,8 +215,9 @@ def checkside(Z,row,col):
         c = 0
     if col + longeur >255:
         d  = 256
+    #print(np.mean(Z[a:b,c:d]),np.std(Z[a:b,c:d]))
     
-    if np.mean(Z[a:b,c:d]) >0.1 and np.std(Z[a:b,c:d])>0.2:
+    if np.mean(Z[a:b,c:d]) >0.7 and np.std(Z[a:b,c:d])<0.5:
         
         return True
     return False

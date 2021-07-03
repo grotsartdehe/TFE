@@ -18,7 +18,7 @@ from Search import *
 from correction import*
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
-
+"caractéristiques du radar simulé:"
 tailles_vehicules =pd.read_csv('vehicule_dimension.csv',sep = ';')
 f_s = 3.413e6;
 f_0=24e9;
@@ -36,7 +36,9 @@ d,v= np.meshgrid(d, v)
 
 def voiture(d,theta,phi,xsi,a,b):
     """
-Voiture calcule le point speculaire renvoyé par le chassis d'une classe de vehicule'
+calcule le point speculaire renvoyé par le chassis d'une classe de vehicule modélisé par
+un OCTOGONE
+
 """ 
     
     
@@ -155,14 +157,9 @@ phi = np.pi/8
 
 def ambiguite(theta,phi,dux=0.3125,duy=0.568,cam_number=0):
     """
-Ambiguité renvoie l'ampltude '
+Ambiguité renvoie carte thermique des angles 
 Argument:
-            X: abscisse du repère
-            Y: ordonnée du repère
-            x: abscisse du vrai signal
-            y: l'ordonnée du vrai signal
-            dux: ecart horizontale entre 2 ambiguités
-            duy: écart vertiale entre 2 ambiguités
+            
             renvoie graphe des ambiguités
 """
     
@@ -239,6 +236,7 @@ def multivariate_gaussian(pos, mu, Sigma):
     return np.exp(-fac / 2) / N
 
 def putindex(Z,row,col,index,classcar=0,res_d = 0.274):
+    "sert a créer associer la postion d'un vehicule (angles) à chaque véhicule"
     large = int(np.floor(2.5/res_d)/2) #longeur voiture ~ 4m + 1m pour marge
     
     Z[row-large:row+large,col-large:col+large]=index
@@ -281,28 +279,13 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     
     cov = np.array([[res_v,0],[0,res_d]])
     Z = multivariate_gaussian(pos,mu , cov)
-    "pic considére comme point speculaire rajout de micro-doppler et à 4/5"
+    
     pic= np.unravel_index(Z.argmax(), Z.shape)
     row,col = pic
     Z += np.ones((1,1))
     Za = putindex(Za,row,col,index)
         
-    """Generation mirco-doppler old way """
-    #omega = np.abs(vabs*math.cos(xsi))
-    #  microdoprange= int((omega/sigma_v )+np.random.normal(loc=2,scale=2))
-    #  amp = np.array(Z[pic] * np.ones(int(np.abs(microdoprange)/2)))#np.exp(-1)#*np.exp(-np.arange(microdoprange/2)))
-    #  newamp = np.append(amp[::-1],amp[1:])
-    #  if(pic[1]-len(amp) <= 0):
-    #      M = 0
-    #      Z[pic[0],M: pic[1]+len(amp)-1] += amp[0]
-    #  elif(pic[1]+len(amp) > N):
-    #      M2 = 255
-    #      Z[pic[0],pic[1]-len(amp): M2] += amp[0]
-    #  else:
-    #      Z[pic[0],pic[1]-len(amp): pic[1]+len(amp)-1] += newamp
-    #  if vabs-omega < 0:
-    #      tozero = int((v-omega)/sigma_v)
-    #      #newamp[0:tozero]=0
+    
     
     """Generation Micro-Doppler new"""
     u = np.arctan(-np.tan(theta)*np.cos(phi))
@@ -349,12 +332,13 @@ def radar(d,v,phi,index,long,largeur,xsi,vabs,f0=24e9):
     plt.show()"""
     
     
-    Znew += np.random.normal(scale = 0.15,size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])
+    #Znew += np.random.normal(scale = 0.15,size=Znew.size).reshape(Znew.shape[0],Znew.shape[1])
     
     return X,Y,Znew,Za
 
 
 def LookDimClass(stringcar):
+    "trouve la dim du véhicule"
     count = 0
     for i in tailles_vehicules['ID']:
         if not stringcar.find(i) ==-1:
@@ -420,17 +404,17 @@ Inputs: classcar: classe du véhicule [string]
             #j+=1
     #heatambi = ambig(Z2,appartenance)
     "plot DV heatmap"
-    plt.figure()
-    d = np.arange(256)* (c/(2*BW))
-    v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
-    #Z1 = (Z1 - np.mean(Z1)/np.std(Z1))
-    #plt.contourf(v,d,20*np.log(Z1))
-    plt.contourf(v,d,Z1)
-    plt.title('Simulation de carte thermique distance-vitesse ')
-    plt.xlabel('vitesse [m/s]')
-    plt.ylabel('distance [m]')
-    plt.colorbar(label = 'Amplitude [dB]')
-    plt.show()
+    # plt.figure()
+    # d = np.arange(256)* (c/(2*BW))
+    # v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
+    # #Z1 = (Z1 - np.mean(Z1)/np.std(Z1))
+    # #plt.contourf(v,d,20*np.log(Z1))
+    # plt.contourf(v,d,Z1)
+    # plt.title('Simulation de carte thermique distance-vitesse ')
+    # plt.xlabel('vitesse [m/s]')
+    # plt.ylabel('distance [m]')
+    # plt.colorbar(label = 'Amplitude [dB]')
+    # plt.show()
     # #plot ambiguité map
     # plt.figure()
     # plt.colorbar(label = 'Amplitude [dB]')
@@ -446,23 +430,23 @@ Inputs: classcar: classe du véhicule [string]
     
     return Z1,Zamb# ,heatambi
 
-Znew,Za = RadarGen(['5458'],[47.5],[10],[93.83*np.pi/180],[68.866*np.pi/180],[np.pi/6],[15])
-d,v,row,col = Searchdv(Znew,256,256)
-print(d,v)
-amb = ambiguite(91,-3,dux=0.3125,duy=0.568,cam_number=0)
-a,b = (Searchangle(amb))
-print(a*180/np.pi,b*180/np.pi)
-plt.figure()
+# Znew,Za = RadarGen(['5458'],[47.5],[10],[93.83*np.pi/180],[68.866*np.pi/180],[np.pi/6],[15])
+# d,v,row,col = Searchdv(Znew,256,256)
+# print(d,v)
+# amb = ambiguite(91,-3,dux=0.3125,duy=0.568,cam_number=0)
+# a,b = (Searchangle(amb))
+# print(a*180/np.pi,b*180/np.pi)
+# plt.figure()
 
-X = np.linspace(-1,1,1024)
-Y  = np.linspace(-1,1,1024)
-# plt.contourf(X,Y,20*np.log(amb))
-# plt.xlabel('u [ ]')
-# plt.ylabel('v [ ]')
-# plt.title('Simulation  de carte thermique des angles ')
-# plt.colorbar(label = 'Amplitude [dB]')
+# X = np.linspace(-1,1,1024)
+# Y  = np.linspace(-1,1,1024)
+# # plt.contourf(X,Y,20*np.log(amb))
+# # plt.xlabel('u [ ]')
+# # plt.ylabel('v [ ]')
+# # plt.title('Simulation  de carte thermique des angles ')
+# # plt.colorbar(label = 'Amplitude [dB]')
 
-plt.show()
+# plt.show()
 # # lam = 3e8/24e9
 # # dx=0.022
 # # dz=0.04

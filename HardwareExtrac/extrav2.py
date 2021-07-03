@@ -66,6 +66,7 @@ yolo = '/home/kdesousa/Documents/GitHub/TFE/HardwareExtrac/yolo/Prise1/labels'
 def Zamb(lignes,colonnes,Z1,Z2,Z3):
     X = np.linspace(-1, 1, N)
     Y = np.linspace(-1, 1, N)
+    # à verifier en fonction du repere choisi
     ux,uy = np.meshgrid(X, Y)
     thetalist = []
     philist = []
@@ -95,6 +96,7 @@ def Zamb(lignes,colonnes,Z1,Z2,Z3):
     return thetalist, philist
 
 def init(picklecomplet):
+    " retorune la calibration du signal en prenant les 3 premiers signaux"
     rip = []
     number = 3
     for i in picklecomplet:
@@ -222,7 +224,7 @@ def test(pickle):
     data = z[0::2] + 1j * z[1::2]
     data_cal = data[2:]
     return data_cal
-
+"""
 a1_cal,a2_cal,a3_cal,magn_cal,aaa = init(d)
 count =0
 countcam = 0
@@ -321,7 +323,7 @@ for i in d:
                 magn_norm = (magn_norm1- np.mean(magn_norm1))/np.std(magn_norm1)
                 d = np.arange(256)* (c/(2*BW))
                 v = np.arange(-128,128,1)*(c*np.pi*f_s/(2*w_0*N_s*256))
-                """ count ==145 exemple rapport"""
+                 #count ==145 exemple rapport
                 if count >100 and count < 150 :
                     while(i[1] > camfiles[countcam]):
                         countcam +=1
@@ -374,7 +376,7 @@ for i in d:
             
 count+=1
 
-
+"""
 
 
 
